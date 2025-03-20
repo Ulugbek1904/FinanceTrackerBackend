@@ -1,4 +1,4 @@
-﻿namespace FinanceTracker.Domain.Models
+﻿namespace FinanceTracker.Domain.Models.DTOs
 {
     public class FinancialReport
     {

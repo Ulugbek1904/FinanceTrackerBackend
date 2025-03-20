@@ -1,31 +1,34 @@
-﻿using FinanceTracker.Domain.Models;
+﻿using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Infrastructure.Brokers.Storages;
+using FinanceTracker.Services.Processings;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 
 namespace FinanceTracker.Presentation.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/home")]
     public class HomeController : RESTFulController
     {
+        private readonly IDashboardProcessingService processingService;
         private readonly IStorageBroker storageBroker;
+        private readonly StorageBroker storageBroker1;
 
-        public HomeController(IStorageBroker storageBroker)
+        public HomeController(
+            IDashboardProcessingService processingService,
+            IStorageBroker storageBroker,
+            StorageBroker storageBroker1)
         {
+            this.processingService = processingService;
             this.storageBroker = storageBroker;
+            this.storageBroker1 = storageBroker1;
         }
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult GetDashboardData()
         {
-            var users = this.storageBroker.SelectAll<User>();
-            var result = string.Empty;
-            foreach (var user in users)
-            {
-                result += user.LastName + user.FirstName + "\n";
-            }
+            var user = this.storageBroker.SaveChangesAsync();
 
-            return Ok(result);
+            return Ok();
         }
     }
 }

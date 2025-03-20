@@ -11,7 +11,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages.Configurations
         {
             builder.HasKey(u => u.Id);
             builder.Property(u => u.Email).IsRequired();
-            builder.Property(u => u.PasswordHash).IsRequired();
+            builder.Property(u => u.Password).IsRequired();
             builder.HasMany(u => u.Transactions).WithOne().HasForeignKey(t => t.UserId);
 
 
@@ -22,7 +22,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages.Configurations
             {
                 Id = superAdminId, 
                 Email = "julugbek023@gmail.com",
-                PasswordHash = "Qwerty1904",
+                Password = "Qwerty1904",
                 FirstName = "Super",
                 LastName = "Admin",
                 Role = Role.SuperAdmin,

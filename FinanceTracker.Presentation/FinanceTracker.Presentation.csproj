@@ -1,24 +1,34 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="RESTFulSense" Version="3.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<!-- ASP.NET Core Authentication & Authorization -->
 
-  <ItemGroup>
-    <ProjectReference Include="..\FinanceTracker.Infrastructure\FinanceTracker.Infrastructure.csproj" />
-    <ProjectReference Include="..\FinanceTracker.Models\FinanceTracker.Domain.csproj" />
-    <ProjectReference Include="..\FinanceTracker.Services\FinanceTracker.Services.csproj" />
-  </ItemGroup>
+		<!-- Entity Framework Core -->
+
+		<!-- Swagger -->
+		<PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.13" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+
+		<!-- REST API helper -->
+		<PackageReference Include="RESTFulSense" Version="3.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Project references -->
+		<ProjectReference Include="..\FinanceTracker.Infrastructure\FinanceTracker.Infrastructure.csproj" />
+		<ProjectReference Include="..\FinanceTracker.Models\FinanceTracker.Domain.csproj" />
+		<ProjectReference Include="..\FinanceTracker.Services\FinanceTracker.Services.csproj" />
+	</ItemGroup>
 
 </Project>

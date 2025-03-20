@@ -12,11 +12,12 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             IConfiguration configuration) : base(options)
         {
             this.configuration = configuration;
-            this.Database.MigrateAsync();
         }
 
         public DbSet<User> Users => Set<User>();
         public DbSet<Transaction> Transactions => Set<Transaction>();
+        public DbSet<Category> Categories => Set<Category>();
+        public DbSet<Account> Accounts => Set<Account>();
 
         public async ValueTask<T> InsertAsync<T>(T entity) where T : class
         {
@@ -65,6 +66,10 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             modelBuilder.ApplyConfiguration(new TransactionConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+
+            modelBuilder.Entity<Account>()
+                .Property(a => a.Balance)
+                .HasColumnType("decimal(18,2)");
 
             base.OnModelCreating(modelBuilder);
         }

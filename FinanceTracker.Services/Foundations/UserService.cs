@@ -68,6 +68,15 @@ namespace FinanceTracker.Services.Foundations
         public async ValueTask<User> RetrieveUserByIdAsync(Guid userId)
             => await this.storageBroker.SelectByIdAsync<User>(userId);
 
+        public ValueTask<User> RetrieveUserByRefreshTokenAsync(string refreshToken)
+        {
+            var users = RetrieveAllUser();
+            var user = users.FirstOrDefault(user => user.RefreshToken == refreshToken);
+            if (user == null)
+                throw new UserNotFoundException();
+            return new ValueTask<User>(user);
+        }
+
         public ValueTask<User> RetrieveUserByUsernameAsync(string firstName)
         {
             var users = RetrieveAllUser();

@@ -4,6 +4,7 @@ namespace FinanceTracker.Services.Foundations.Interfaces
 {
     public interface IUserService
     {
+        ValueTask<User> RetrieveUserByRefreshTokenAsync(string refreshToken);
         ValueTask<User> RegisterUserAsync(User user);
         ValueTask<User> RetrieveUserByIdAsync(Guid userId);
         ValueTask<User> ModifyUserAsync(User user);
