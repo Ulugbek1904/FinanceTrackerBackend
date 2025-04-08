@@ -1,12 +1,13 @@
 ﻿namespace FinanceTracker.Domain.Enums
 {
-    public enum TransactionSource
+    public enum AccountType
     {
+        Wallet,
         Cash,
         CreditCard,
         BankAccount,
-        DebitCard,
         CryptoCurrency,
+        DebitCard,
         Other
     }
 }

@@ -6,5 +6,8 @@ namespace FinanceTracker.Services.Foundations.Interfaces
     {
         ValueTask<Category> CreateCategoryAsync(Category category);
         IQueryable<Category> RetrieveAllCategories();
+        ValueTask<Category> RetrieveCategoryByIdAsync(int categoryId);
+        ValueTask<Category> UpdateCategoryAsync(Category category);
+        ValueTask<Category> RemoveCategoryAsync(int categoryId);
     }
 }

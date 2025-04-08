@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(StorageBroker))]
-    [Migration("20250320092148_AddingProfilePicture")]
-    partial class AddingProfilePicture
+    [Migration("20250325075202_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,15 +35,20 @@ namespace FinanceTracker.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Source")
-                        .HasColumnType("int");
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Accounts");
                 });
@@ -56,15 +61,22 @@ namespace FinanceTracker.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsIncome")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Categories");
 
@@ -72,74 +84,86 @@ namespace FinanceTracker.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            Name = "Food",
-                            Type = "Food"
+                            IsDefault = true,
+                            IsIncome = true,
+                            Name = "Salary"
                         },
                         new
                         {
                             Id = 2,
-                            Name = "Salary",
-                            Type = "Salary"
+                            IsDefault = true,
+                            IsIncome = true,
+                            Name = "Bonus"
                         },
                         new
                         {
                             Id = 3,
-                            Name = "Transport",
-                            Type = "Transportation"
+                            IsDefault = true,
+                            IsIncome = true,
+                            Name = "Investment"
                         },
                         new
                         {
                             Id = 4,
-                            Name = "Rent",
-                            Type = "Rent"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Food"
                         },
                         new
                         {
                             Id = 5,
-                            Name = "Utilities",
-                            Type = "Utilities"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Transportation"
                         },
                         new
                         {
                             Id = 6,
-                            Name = "Entertainment",
-                            Type = "Entertainment"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Bills"
                         },
                         new
                         {
                             Id = 7,
-                            Name = "Other",
-                            Type = "Other"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Shopping"
                         },
                         new
                         {
                             Id = 8,
-                            Name = "Shopping",
-                            Type = "Shopping"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Entertainment"
                         },
                         new
                         {
                             Id = 9,
-                            Name = "Health",
-                            Type = "Health"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Health"
                         },
                         new
                         {
                             Id = 10,
-                            Name = "Investment",
-                            Type = "Investment"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Rent"
                         },
                         new
                         {
                             Id = 11,
-                            Name = "Bills",
-                            Type = "Bills"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Utilities"
                         },
                         new
                         {
                             Id = 12,
-                            Name = "Bonus",
-                            Type = "Bonus"
+                            IsDefault = true,
+                            IsIncome = false,
+                            Name = "Other"
                         });
                 });
 
@@ -171,16 +195,11 @@ namespace FinanceTracker.Infrastructure.Migrations
                     b.Property<int>("TransactionType")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Transactions");
                 });
@@ -194,12 +213,13 @@ namespace FinanceTracker.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
@@ -243,7 +263,7 @@ namespace FinanceTracker.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "julugbek023@gmail.com",
                             FirstName = "Super",
                             IsActive = true,
@@ -253,32 +273,57 @@ namespace FinanceTracker.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("FinanceTracker.Domain.Models.Transaction", b =>
+            modelBuilder.Entity("FinanceTracker.Domain.Models.Account", b =>
                 {
-                    b.HasOne("FinanceTracker.Domain.Models.Account", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FinanceTracker.Domain.Models.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId");
-
-                    b.HasOne("FinanceTracker.Domain.Models.User", null)
-                        .WithMany("Transactions")
+                    b.HasOne("FinanceTracker.Domain.Models.User", "User")
+                        .WithMany("Accounts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FinanceTracker.Domain.Models.Category", b =>
+                {
+                    b.HasOne("FinanceTracker.Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FinanceTracker.Domain.Models.Transaction", b =>
+                {
+                    b.HasOne("FinanceTracker.Domain.Models.Account", "Account")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FinanceTracker.Domain.Models.Category", "Category")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Account");
 
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("FinanceTracker.Domain.Models.User", b =>
+            modelBuilder.Entity("FinanceTracker.Domain.Models.Account", b =>
                 {
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("FinanceTracker.Domain.Models.Category", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("FinanceTracker.Domain.Models.User", b =>
+                {
+                    b.Navigation("Accounts");
                 });
 #pragma warning restore 612, 618
         }

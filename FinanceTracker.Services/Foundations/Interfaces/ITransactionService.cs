@@ -8,5 +8,6 @@ namespace FinanceTracker.Services.Foundations.Interfaces
         IQueryable<Transaction> RetrieveAllTransactions(Guid userId);
         ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction);
         ValueTask<Transaction> RemoveTransactionByIdAsync(Guid transactionId);
+        ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId);
     }
 }

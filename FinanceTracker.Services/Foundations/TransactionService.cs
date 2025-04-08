@@ -29,8 +29,10 @@ namespace FinanceTracker.Services.Foundations
 
         public async ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction)
         {
-            await this.storageBroker.SelectByIdAsync<Transaction>(transaction.Id);
-            if (transaction == null)
+            var existingTransaction = await this.storageBroker
+                .SelectByIdAsync<Transaction>(transaction.Id);
+
+            if (existingTransaction == null)
                 throw new TransactionNotFoundException();
 
             this.aggregate.ValidateTransaction(transaction);
@@ -55,13 +57,14 @@ namespace FinanceTracker.Services.Foundations
         public IQueryable<Transaction> RetrieveAllTransactions(Guid userId)
         {
             var transactions =  this.storageBroker.SelectAll<Transaction>()
-                .Where(t => t.UserId == userId);
-
-            if (transactions.Count() == 0)
-                throw new Exception("You have not transaction yet");
+                .Where(t => t.Account.UserId == userId);
 
             return transactions;
         }
 
+        public ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId)
+        {
+            return this.storageBroker.SelectByIdAsync<Transaction>(transactionId);
+        }
     }
 }

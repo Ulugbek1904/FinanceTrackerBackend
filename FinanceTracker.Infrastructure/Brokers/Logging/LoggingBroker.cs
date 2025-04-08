@@ -19,6 +19,11 @@ namespace FinanceTracker.Infrastructure.Brokers.Logging
             _logger.Error(exception, exception.Message);
         }
 
+        public void LogError(string message, Exception exception)
+        {
+            _logger.Error(exception, message);
+        }
+
         public void LogInformation(string message)
         {
             _logger.Information(message);

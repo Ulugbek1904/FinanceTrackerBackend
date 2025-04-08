@@ -52,6 +52,11 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             return entity;
         }
 
+        public async ValueTask<Category> SelectCategoryByIdAsync(int categoryId)
+        {
+            return await this.Categories.FindAsync(categoryId);
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -66,6 +71,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             modelBuilder.ApplyConfiguration(new TransactionConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new AccountConfiguration());
 
             modelBuilder.Entity<Account>()
                 .Property(a => a.Balance)

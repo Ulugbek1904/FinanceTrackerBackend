@@ -64,11 +64,11 @@ namespace FinanceTracker.Services.Foundations
             if(file == null || file.Length == 0)
                 throw new ArgumentNullException("File is missing");
 
-            const long maxSize = 2 * 1024 * 1024;
-            if(file.Length > maxSize)
+            const long maxSize = 5 * 1024 * 1024; // 2 MB
+            if (file.Length > maxSize)
                 throw new ArgumentOutOfRangeException("File size is too large");
 
-            var allowedExtensions = new[] { ".png", "jpg", "jpeg" };
+            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
             if (!allowedExtensions.Contains(fileExtension))
@@ -96,6 +96,7 @@ namespace FinanceTracker.Services.Foundations
 
             return user.ProfilePictureUrl;
         }
+
         public bool Verify(string old, string _new)
         {
             if (old == _new) return true;

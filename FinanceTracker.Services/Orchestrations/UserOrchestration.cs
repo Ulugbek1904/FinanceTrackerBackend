@@ -1,4 +1,5 @@
-﻿using FinanceTracker.Domain.Models;
+﻿using FinanceTracker.Domain.Enums;
+using FinanceTracker.Domain.Models;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
 
@@ -24,7 +25,10 @@ namespace FinanceTracker.Services.Orchestrations
             {
                 Id = Guid.NewGuid(),
                 UserId = createdUser.Id,
-                Balance = 0
+                Name = "My Wallet",
+                Type = AccountType.Wallet,
+                Balance = 0,
+                IsPrimary = true
             };
 
             await this.accountService.CreateAccountAsync(newAccount);

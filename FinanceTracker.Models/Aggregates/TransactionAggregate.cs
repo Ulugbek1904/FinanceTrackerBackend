@@ -11,7 +11,6 @@ namespace FinanceTracker.Domain.Aggregates
         public void ValidateTransaction(Transaction transaction)
         {
             ValidateAmount(transaction.Amount);
-            ValidateCategory(transaction.Category.Type);
             ValidateTransactionSource(transaction.Source);
         }
         public void ValidateAmount(decimal amount)
@@ -22,17 +21,9 @@ namespace FinanceTracker.Domain.Aggregates
             }
         }
 
-        public void ValidateCategory(CategoryType category)
+        public void ValidateTransactionSource(AccountType source)
         {
-            if (!Enum.IsDefined(typeof(CategoryType), category))
-            {
-                throw new TransactionValidationException("Invalid Category");
-            }
-        }
-
-        public void ValidateTransactionSource(TransactionSource source)
-        {
-            if (!Enum.IsDefined(typeof(TransactionSource), source))
+            if (!Enum.IsDefined(typeof(AccountType), source))
             {
                 throw new TransactionValidationException("Invalid Source");
             }

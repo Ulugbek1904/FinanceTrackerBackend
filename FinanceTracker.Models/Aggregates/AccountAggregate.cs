@@ -9,7 +9,7 @@ namespace FinanceTracker.Domain.Aggregates
         public void ValidateAccount(Account account)
         {
             ValidateName(account.Name);
-            ValidateBalance(account.Source, account.Balance);
+            ValidateBalance(account.Type, account.Balance);
         }
         private void ValidateName(string name)
         {
@@ -19,9 +19,9 @@ namespace FinanceTracker.Domain.Aggregates
             }
         }
 
-        private void ValidateBalance(TransactionSource source, decimal balance)
+        private void ValidateBalance(AccountType source, decimal balance)
         {
-            if (source is TransactionSource.Cash or TransactionSource.DebitCard && balance < 0)
+            if (source is AccountType.Cash or AccountType.DebitCard && balance < 0)
             {
                 throw new AccountValidationException($"{source} account balance cannot be negative");
             }

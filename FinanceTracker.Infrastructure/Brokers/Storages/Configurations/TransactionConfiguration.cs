@@ -11,7 +11,15 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages.Configurations
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Amount).HasColumnType("decimal(18,2)");
             builder.Property(t => t.Source).HasConversion<string>();
-            builder.HasOne<User>().WithMany(u => u.Transactions).HasForeignKey(t => t.UserId);
+
+            builder.HasOne(t => t.Account)
+                .WithMany(a => a.Transactions)
+                .HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
+            builder.HasOne(t => t.Category)
+                .WithMany(c => c.Transactions)
+                .HasForeignKey(t => t.CategoryId);
         }
     }
 
