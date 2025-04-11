@@ -19,11 +19,18 @@ namespace FinanceTracker.Presentation.Controllers
 
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
         {
-            var response = await this.authService.LoginAsync(request.Email, request.Password);
+            try
+            {
+                var response = await this.authService.LoginAsync(request.Email, request.Password);
 
-            return Ok(response);
+                return Ok(response);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized("Invalid email or password");
+            }
         }
 
         [HttpPost("refresh-token")]

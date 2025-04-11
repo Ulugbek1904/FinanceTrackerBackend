@@ -66,8 +66,15 @@ namespace FinanceTracker.Services.Foundations
 
                 var category = await this.storageBroker.SelectCategoryByIdAsync(categoryId);
 
-                return category ??
+                if(category is null)
                     throw new CategoryNotFoundException($"Not found category with ID : {categoryId}");
+
+                return category;
+            }
+            catch (CategoryNotFoundException ex)
+            {
+                logging.LogError($"Category not found: {ex.Message}",ex);
+                throw; 
             }
             catch (Exception ex)
             {

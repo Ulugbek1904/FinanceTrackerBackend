@@ -3,6 +3,7 @@ using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Services.Foundations;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceTracker.Services.Orchestrations
 {
@@ -10,25 +11,30 @@ namespace FinanceTracker.Services.Orchestrations
     {
         private readonly ICategoryService category;
         private readonly ITransactionService transactionService;
-        private readonly IAccountService account;
 
         public ReportOrchestrationService(
             ICategoryService category,
-            ITransactionService transactionService,
-            IAccountService account)
+            ITransactionService transactionService)
         {
             this.category = category;
             this.transactionService = transactionService;
-            this.account = account;
         }
 
-        public FinancialReport GenerateMonthlyReport(Guid userId, int year, int month)
+        public async ValueTask<FinancialReport> GenerateMonthlyReport(Guid userId, int year, int month)
         {
-            var transactions = this.transactionService.RetrieveAllTransactions(userId)
+            var transactions = await this.transactionService.RetrieveAllTransactions(userId)
                 .Where(t => t.TransactionDate.Year == year && t.TransactionDate.Month == month)
-                .ToList();
+                .ToListAsync();
 
-            var categories = this.category.RetrieveAllCategories().ToList();
+
+            var categories = await this.category.RetrieveAllCategories()
+                .Where(c => c.UserId == userId || c.UserId ==null).ToListAsync();
+
+            var categorySums = transactions
+                .GroupBy(t => t.Category.Id)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(t => t.Amount));
 
             return new FinancialReport
             {
@@ -41,8 +47,7 @@ namespace FinanceTracker.Services.Orchestrations
                 Categories = categories.Select(c => new CategorySummary
                 {
                     Name = c.Name,
-                    Amount = transactions.Where(t => t.Category.Id == c.Id)
-                        .Sum(t => t.Amount)
+                    Amount = categorySums.ContainsKey(c.Id) ? categorySums[c.Id] : 0
                 }).ToList(),
                 NetBalance = transactions.Where(t => t.TransactionType == TransactionType.Income)
                     .Sum(t => t.Amount) - transactions.Where(t => t.TransactionType == TransactionType.Expense)

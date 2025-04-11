@@ -4,6 +4,6 @@ namespace FinanceTracker.Services.Processings
 {
     public interface IDashboardProcessingService
     {
-        DashboardData GetDashboardData(Guid userId);
+        ValueTask<DashboardSummaryDto> GetDashboardData(Guid userId);
     }
 }

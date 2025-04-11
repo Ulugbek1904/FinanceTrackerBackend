@@ -67,7 +67,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpGet]
-        [Route("getting-all-transactions")]
+        [Route("transactions")]
         public IActionResult GetAllTransactions()
         {
             try
@@ -87,7 +87,7 @@ namespace FinanceTracker.Presentation.Controllers
             }
         }
 
-        [HttpGet("get-transaction-by-id/{id:guid}")]
+        [HttpGet("transaction-by-id/{id:guid}")]
         public async ValueTask<IActionResult> GetTransactionById(Guid id)
         {
             try
