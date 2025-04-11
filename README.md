@@ -22,7 +22,6 @@ A personal finance management API built with ASP.NET Core and Entity Framework. 
 - Entity Framework Core
 - PostgreSQL / SQL Server
 - RESTFulSense for standardized responses
-- AutoMapper (optional, future use)
 - JWT Authentication
 
 ---
