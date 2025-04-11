@@ -31,4 +31,4 @@ A personal finance management API built with ASP.NET Core and Entity Framework. 
 
 1. **Clone repo**  
 ```bash
-git clone https://github.com/your-username/finance-tracker.git
+https://github.com/Ulugbek1904/FinanceTrackerBackend.git
