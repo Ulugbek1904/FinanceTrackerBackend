@@ -3,6 +3,7 @@ using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceTracker.Services.Foundations
 {
@@ -57,7 +58,9 @@ namespace FinanceTracker.Services.Foundations
         public IQueryable<Transaction> RetrieveAllTransactions(Guid userId)
         {
             var transactions =  this.storageBroker.SelectAll<Transaction>()
-                .Where(t => t.Account.UserId == userId);
+                .Where(t => t.Account.UserId == userId)
+                .Include(t => t.Account)
+                .Include(t => t.Category);
 
             return transactions;
         }

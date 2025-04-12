@@ -3,6 +3,7 @@ using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinanceTracker.Services.Orchestrations
 {

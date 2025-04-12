@@ -1,10 +1,13 @@
-﻿using FinanceTracker.Domain.Models;
+﻿using CsvHelper;
+using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RESTFulSense.Controllers;
+using System.Globalization;
 using System.Security.Claims;
 
 namespace FinanceTracker.Presentation.Controllers
@@ -34,12 +37,11 @@ namespace FinanceTracker.Presentation.Controllers
 
             try
             {
-                var userIdentifier = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = GetUserId();
 
-                if (userIdentifier == null)
+                if (userId == null)
                     return Unauthorized();
 
-                var userId = Guid.Parse(userIdentifier);
                 var account = await accountService.GetAccountByIdAsync(transactionDto.AccountId);
 
                 if (account.UserId != userId)
@@ -72,13 +74,12 @@ namespace FinanceTracker.Presentation.Controllers
         {
             try
             {
-                var userIdentifier = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdentifier == null)
+                var userId = GetUserId();
+
+                if (userId == null)
                     return Unauthorized();
 
-                var userId = Guid.Parse(userIdentifier);
-
-                var transactions = orchestration.RetrieveAllTransactions(userId);
+                var transactions = orchestration.RetrieveAllTransactions(userId.Value);
                 return Ok(transactions);
             }
             catch (Exception ex)
@@ -87,14 +88,15 @@ namespace FinanceTracker.Presentation.Controllers
             }
         }
 
+
         [HttpGet("transaction-by-id/{id:guid}")]
         public async ValueTask<IActionResult> GetTransactionById(Guid id)
         {
             try
             {
-                var userIdentifier = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = GetUserId();
 
-                if (userIdentifier == null)
+                if (userId == null)
                     return Unauthorized();
 
                 var transaction = await orchestration.RetrieveTransactionByIdAsync(id);
@@ -107,6 +109,7 @@ namespace FinanceTracker.Presentation.Controllers
             }
         }
 
+
         [HttpPut("update-transaction/{id}")]
         public async ValueTask<IActionResult> UpdateTransaction(
             Guid transactionId, [FromBody] TransactionCreateDto transactionDto)
@@ -115,8 +118,9 @@ namespace FinanceTracker.Presentation.Controllers
                 return BadRequest();
             try
             {
-                var userIdentifier = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdentifier == null)
+                var userId = GetUserId();
+
+                if (userId == null)
                     return Unauthorized();
 
                 var existingTransaction = await 
@@ -144,8 +148,9 @@ namespace FinanceTracker.Presentation.Controllers
         {
             try
             {
-                var userIdentifier = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdentifier == null)
+                var userId = GetUserId();
+
+                if (userId == null)
                     return Unauthorized();
 
                 var transaction = await 
@@ -161,6 +166,48 @@ namespace FinanceTracker.Presentation.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+
+        [HttpGet("export")]
+        public async ValueTask<IActionResult> ExportCsvFile()
+        {
+            var userId = GetUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            var transactions = await this.orchestration
+                .RetrieveAllTransactions(userId.Value)
+                .Select(t => new TransactionDto
+                {
+                    Id = t.Id,
+                    Description = t.Description,
+                    Amount = t.Amount,
+                    TransactionDate = t.TransactionDate,
+                    TransactionType = t.TransactionType,
+                    AccountName = t.Account.Name,
+                    CategoryName = t.Category.Name,
+                })
+                .ToListAsync();
+
+            using var memoryStream = new MemoryStream();
+            using var writer = new StreamWriter(memoryStream);
+            using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+            csv.WriteRecords(transactions);
+            writer.Flush();
+
+            var fileName = $"Transactions-{DateTime.UtcNow:yyyyMMddHH}.csv";
+
+            return File(memoryStream.ToArray(),"text/csv", fileName);
+        }
+
+        private Guid? GetUserId()
+        {
+            var userId = User
+                .FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId);
         }
     }
 }
