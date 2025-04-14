@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Infrastructure.Providers.FileProvider;
+using Microsoft.AspNetCore.Identity;
 
 namespace FinanceTracker.Services.Foundations
 {
@@ -36,18 +37,22 @@ namespace FinanceTracker.Services.Foundations
 
             var user = await storageBroker.SelectByIdAsync<User>(userId);
 
-            if (Verify(passwordDto.OldPassword, user.Password))
-            {
-                user.Password = passwordDto.NewPassword;
-                await storageBroker.UpdateAsync(user);
+            var isVerified = BCrypt.Net.BCrypt
+                .Verify(passwordDto.OldPassword, user.HashedPassword);
 
-                return user;
-            }
-            else
+            if (!isVerified)
             {
                 throw new UnauthorizedAccessException("Password is incorrect");
             }
+
+            user.HashedPassword = BCrypt.Net
+                .BCrypt.HashPassword(passwordDto.NewPassword);
+
+            await storageBroker.UpdateAsync(user);
+
+            return user;
         }
+
 
         public async ValueTask<User> UpdateProfileAsync(Guid userId, string firstName, string lastName)
         {

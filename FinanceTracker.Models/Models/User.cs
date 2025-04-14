@@ -11,7 +11,7 @@ namespace FinanceTracker.Domain.Models
         public Guid Id { get; set; }
         [EmailAddress]
         public string Email { get; set; }
-        public string Password{ get; set; }
+        public string HashedPassword{ get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public Role Role { get; set; }

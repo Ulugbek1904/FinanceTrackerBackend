@@ -27,11 +27,11 @@ namespace FinanceTracker.Infrastructure.Providers.AuthProvider
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Name, user.FirstName),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.GivenName, user.FirstName)
+                new Claim(ClaimTypes.GivenName, user.LastName)
             };
 
             var token = new JwtSecurityToken(

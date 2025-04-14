@@ -3,7 +3,9 @@ using FinanceTracker.Domain.Models;
 using FinanceTracker.Infrastructure.Brokers.Logging;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Serilog;
+using System.Security.Claims;
 
 namespace FinanceTracker.Services.Foundations
 {
@@ -11,14 +13,17 @@ namespace FinanceTracker.Services.Foundations
     {
         private readonly IStorageBroker storageBroker;
         private readonly ILoggingBroker logging;
+        private readonly IHttpContextAccessor httpContext;
         private readonly ILogger logger;
 
         public CategoryService(
             IStorageBroker storageBroker,
-            ILoggingBroker logging)
+            ILoggingBroker logging,
+            IHttpContextAccessor httpContext)
         {
             this.storageBroker = storageBroker;
             this.logging = logging;
+            this.httpContext = httpContext;
         }
 
 

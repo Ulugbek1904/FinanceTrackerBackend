@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(StorageBroker))]
-    [Migration("20250409174502_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20250414194325_AddingInitialMIgration")]
+    partial class AddingInitialMIgration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -257,6 +257,10 @@ namespace FinanceTracker.Infrastructure.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -265,10 +269,6 @@ namespace FinanceTracker.Infrastructure.Migrations
 
                     b.Property<DateTime?>("OtpExpiration")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordResetOtp")
                         .HasColumnType("nvarchar(max)");
@@ -291,19 +291,6 @@ namespace FinanceTracker.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "julugbek023@gmail.com",
-                            FirstName = "Super",
-                            IsActive = true,
-                            LastName = "Admin",
-                            Password = "Qwerty1904",
-                            Role = 0
-                        });
                 });
 
             modelBuilder.Entity("FinanceTracker.Domain.Models.Account", b =>

@@ -48,6 +48,7 @@ namespace FinanceTracker.Presentation.Controllers
                 user.Id,
                 user.Email,
                 user.FirstName,
+                user.HashedPassword,
                 user.LastName,
                 user.Role,
                 user.CreatedAt,
@@ -84,7 +85,7 @@ namespace FinanceTracker.Presentation.Controllers
             var user = new User
             {
                 Email = userDto.Email,
-                Password = userDto.Password,
+                HashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
                 FirstName = userDto.FirstName,
                 LastName = userDto.LastName,
                 Role = Role.User,

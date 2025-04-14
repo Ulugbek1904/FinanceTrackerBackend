@@ -3,6 +3,7 @@ using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Infrastructure.Providers.AuthProvider;
 using FinanceTracker.Services.Foundations.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
@@ -13,7 +14,6 @@ namespace FinanceTracker.Services.Foundations
         private readonly IAuthProvider provider;
         private readonly IUserService userService;
         private readonly IHttpContextAccessor contextAccessor;
-
         public AuthService(
             IAuthProvider provider,
             IUserService userService,
@@ -27,16 +27,22 @@ namespace FinanceTracker.Services.Foundations
         public async Task<AuthResponse> LoginAsync(string email, string password)
         {
             var user = await this.userService.GetUserByEmailAsync(email);
-            if (user == null || user.Password != password)
-            {
-                throw new UnauthorizedAccessException("Invalid email or password.");
-            }
+
+            if(user is null || !user.IsActive)
+                throw new UnauthorizedAccessException("Invalid credentials");
+
+            bool isValidPassword = BCrypt.Net.
+                BCrypt.Verify(password, user.HashedPassword);
+
+            if (!isValidPassword)
+                throw new UnauthorizedAccessException("Invalid credentials");
 
             var accessToken = this.provider.GenerateJwtToken(user);
             var refreshToken = this.provider.GenerateRefreshToken();
 
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiration = DateTime.UtcNow.AddDays(7);
+
             await this.userService.ModifyUserAsync(user);
 
             return new AuthResponse

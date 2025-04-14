@@ -254,6 +254,10 @@ namespace FinanceTracker.Infrastructure.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -262,10 +266,6 @@ namespace FinanceTracker.Infrastructure.Migrations
 
                     b.Property<DateTime?>("OtpExpiration")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordResetOtp")
                         .HasColumnType("nvarchar(max)");
@@ -288,19 +288,6 @@ namespace FinanceTracker.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "julugbek023@gmail.com",
-                            FirstName = "Super",
-                            IsActive = true,
-                            LastName = "Admin",
-                            Password = "Qwerty1904",
-                            Role = 0
-                        });
                 });
 
             modelBuilder.Entity("FinanceTracker.Domain.Models.Account", b =>

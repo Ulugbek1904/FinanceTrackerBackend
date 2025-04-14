@@ -26,7 +26,7 @@ namespace FinanceTracker.Services.Foundations
                 otpCode != user.PasswordResetOtp)
                 throw new UnauthorizedAccessException("Invalid code");
 
-            user.Password = newPassword;
+            user.HashedPassword = newPassword;
             user.OtpExpiration = null;
             user.PasswordResetOtp = null;
 

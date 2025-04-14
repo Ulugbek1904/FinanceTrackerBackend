@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FinanceTracker.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class AddingInitialMIgration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,7 @@ namespace FinanceTracker.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HashedPassword = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Role = table.Column<int>(type: "int", nullable: false),
@@ -131,11 +131,6 @@ namespace FinanceTracker.Infrastructure.Migrations
                     { 11, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, false, "Utilities", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null },
                     { 12, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, false, "Other", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null }
                 });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "CreatedAt", "CreatedBy", "Email", "FirstName", "IsActive", "LastName", "OtpExpiration", "Password", "PasswordResetOtp", "ProfilePictureUrl", "RefreshToken", "RefreshTokenExpiration", "Role", "UpdatedAt" },
-                values: new object[] { new Guid("11111111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "julugbek023@gmail.com", "Super", true, "Admin", null, "Qwerty1904", null, null, null, null, 0, null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Accounts_UserId",

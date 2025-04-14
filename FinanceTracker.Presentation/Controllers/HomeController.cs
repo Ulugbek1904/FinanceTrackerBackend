@@ -50,7 +50,7 @@ namespace FinanceTracker.Presentation.Controllers
                 user.UpdatedAt,
                 user.IsActive,
                 user.Role,
-                user.Password
+                user.HashedPassword
             };
 
             return Ok(result);

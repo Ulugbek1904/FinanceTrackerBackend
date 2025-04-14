@@ -7,13 +7,14 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using AspNetCoreRateLimit;
+using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
 
 
 namespace FinanceTracker.Presentation
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -93,6 +94,8 @@ namespace FinanceTracker.Presentation
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
+
+            await AppDbInitializer.SeedSuperAdminAsync(app.Services);
 
             if (app.Environment.IsDevelopment())
             {
