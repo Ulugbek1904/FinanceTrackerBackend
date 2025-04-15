@@ -180,7 +180,6 @@ namespace FinanceTracker.Presentation.Controllers
                 .RetrieveAllTransactions(userId.Value)
                 .Select(t => new TransactionDto
                 {
-                    Id = t.Id,
                     Description = t.Description,
                     Amount = t.Amount,
                     TransactionDate = t.TransactionDate,
