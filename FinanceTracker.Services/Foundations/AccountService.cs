@@ -14,6 +14,12 @@ namespace FinanceTracker.Services.Foundations
         {
             this.storageBroker = storageBroker;
         }
+
+        public IQueryable<Account> GetAccountsByUserId(Guid userId)
+        {
+            return this.storageBroker.SelectAll<Account>()
+                .Where(account => account.UserId == userId);
+        }
         public async ValueTask<Account> CreateAccountAsync(Account account)
         {
             this.accountAggregate.ValidateAccount(account);
@@ -23,6 +29,7 @@ namespace FinanceTracker.Services.Foundations
 
         public async ValueTask<Account> GetAccountByIdAsync(Guid accountId)
         {
+
             var account = await this.storageBroker
                 .SelectByIdAsync<Account>(accountId);
 
@@ -38,6 +45,26 @@ namespace FinanceTracker.Services.Foundations
             account.Balance += amount;
 
             return await this.storageBroker.UpdateAsync(account);
+        }
+
+        public async ValueTask<Account> UpdateAccountAsync(Account account)
+        {
+            var updatedAccount = await this.storageBroker.UpdateAsync(account);
+
+            if (updatedAccount is null)
+                throw new ArgumentNullException(nameof(account));
+
+            return updatedAccount;
+        }
+
+        public async ValueTask<Account> DeleteAccountAsync(Account account)
+        {
+            var deletedAccount = await this.storageBroker.DeleteAsync(account);
+
+            if (deletedAccount is null)
+                throw new ArgumentNullException(nameof(account));
+
+            return deletedAccount;
         }
     }
 }

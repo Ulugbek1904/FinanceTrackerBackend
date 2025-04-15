@@ -56,11 +56,33 @@ namespace FinanceTracker.Services.Processings
                 .OrderByDescending(cs => cs.Amount)
                 .Take(8).ToList();
 
+            var monthlySummary = transactions.Count() > 0
+                ? transactions.GroupBy(t => t.TransactionDate.ToString("yyyy-MM"))
+                .Select(g => new MonthlySummaryDto
+                {
+                    Month = g.Key,
+                    TotalIncome = g.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount),
+                    TotalExpense = g.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount)
+                })
+                .OrderBy(m => m.Month)
+                .ToList() : new List<MonthlySummaryDto>();
+
+            var accountSummary = transactions.GroupBy(t => t.Account.Name)
+                .Select(g => new AccountSummaryDto
+                {
+                    AccountName = g.Key,
+                    TotalBalance = g.Sum(t => t.TransactionType == TransactionType.Income ? t.Amount : -t.Amount)
+                })
+                .OrderByDescending(a => a.TotalBalance)
+                .ToList();
+
             return new DashboardSummaryDto
             {
                 TotalIncome = totalIncome,
                 TotalExpense = totalExpence,
                 NetBalance = netBalance,
+                MonthlySummary = monthlySummary,
+                AccountSummaries = accountSummary,
                 RecentTransactions = recentTransactions,
                 TopCategories = topCategories
             };

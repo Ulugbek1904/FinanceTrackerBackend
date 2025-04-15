@@ -9,7 +9,7 @@ namespace FinanceTracker.Domain.Models
     public class User
     {
         public Guid Id { get; set; }
-        [EmailAddress]
+        [EmailAddress(ErrorMessage ="Email is not valid")]
         public string Email { get; set; }
         public string HashedPassword{ get; set; }
         public string FirstName { get; set; }
