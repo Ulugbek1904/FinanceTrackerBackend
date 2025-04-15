@@ -1,4 +1,5 @@
-﻿using FinanceTracker.Services.Orchestrations.Interfaces;
+﻿using FinanceTracker.Domain.Models.DTOs;
+using FinanceTracker.Services.Orchestrations.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
@@ -30,6 +31,20 @@ namespace FinanceTracker.Presentation.Controllers
                 .GenerateMonthlyReport(userId.Value, year, month);
 
             return Ok(report);
+        }
+
+        [HttpPost("report")]
+        public async ValueTask<IActionResult> GetReportData([FromBody] ReportFilterDto filter)
+        {
+            var userId = GetUserId();
+
+            if (userId is null)
+                return Unauthorized();
+
+            var reportData = await reportOrchestration
+                .GetUserReportDataByPeriod(userId.Value, filter);
+
+            return Ok(reportData);
         }
 
         private Guid? GetUserId()

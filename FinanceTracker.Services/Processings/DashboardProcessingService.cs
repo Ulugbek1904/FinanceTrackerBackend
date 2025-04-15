@@ -37,7 +37,6 @@ namespace FinanceTracker.Services.Processings
                 .Take(8)
                 .Select(t => new TransactionDto
                 {
-                    Id = t.Id,
                     Description = t.Description,
                     Amount = t.Amount,
                     TransactionDate = t.TransactionDate,

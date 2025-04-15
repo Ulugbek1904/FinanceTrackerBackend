@@ -54,5 +54,50 @@ namespace FinanceTracker.Services.Orchestrations
                     .Sum(t => t.Amount)
             };
         }
+
+        public async ValueTask<ReportResultDto> GetUserReportDataByPeriod(Guid userId, ReportFilterDto filter)
+        {
+            var transactions = await this.transactionService.RetrieveAllTransactions(userId)
+                .Include(t => t.Category)
+                .Include(t =>t.Account)
+                .Where(t => t.TransactionDate >= filter.StartDate && t.TransactionDate <= filter.EndDate)
+                .ToListAsync();
+
+            if (filter.CategoryId.HasValue)
+            {
+                transactions = transactions
+                    .Where(t => t.CategoryId == filter.CategoryId.Value).ToList();
+            }
+
+            if (filter.AccountId.HasValue)
+            {
+                transactions = transactions
+                    .Where(t => t.AccountId == filter.AccountId.Value).ToList();
+            }
+
+            var income = transactions
+                .Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount);
+
+            var expense = transactions
+                .Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount);
+
+            var mappedTransactions = transactions
+                .Select(t => new TransactionDto
+                {
+                    Description = t.Description,
+                    Amount = t.Amount,
+                    TransactionDate = t.TransactionDate,
+                    TransactionType = t.TransactionType,
+                    CategoryName = t.Category.Name,
+                    AccountName = t.Account.Name
+                }).ToList();
+
+            return new ReportResultDto
+            {
+                TotalExpense = expense,
+                TotalIncome = income,
+                Transactions = mappedTransactions
+            };
+        }
     }
 }
