@@ -18,6 +18,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Account> Accounts => Set<Account>();
+        public DbSet<Budget> Budgets => Set<Budget>();
 
         public async ValueTask<T> InsertAsync<T>(T entity) where T : class
         {
@@ -72,6 +73,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
             modelBuilder.ApplyConfiguration(new AccountConfiguration());
+            modelBuilder.ApplyConfiguration(new BudgetConfiguration());
 
             modelBuilder.Entity<Account>()
                 .Property(a => a.Balance)
