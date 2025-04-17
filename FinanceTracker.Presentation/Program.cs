@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using AspNetCoreRateLimit;
 using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
+using FinanceTracker.Presentation.Mappings;
 
 
 namespace FinanceTracker.Presentation
@@ -33,7 +34,7 @@ namespace FinanceTracker.Presentation
             builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
             builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
 
-
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddApplicationService();
             builder.Services.AddControllers();
 

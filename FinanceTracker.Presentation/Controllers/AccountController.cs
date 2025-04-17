@@ -91,8 +91,7 @@ namespace FinanceTracker.Presentation.Controllers
                 if (createdAccount is null)
                     return BadRequest("Account creation failed.");
 
-                return CreatedAtAction(nameof(GetAccountByIdAsync),
-                    new { id = createdAccount.Id }, createdAccount);
+                return Created(createdAccount);
             }
             catch (Exception ex)
             {
@@ -165,7 +164,7 @@ namespace FinanceTracker.Presentation.Controllers
             }
         }
 
-        [HttpPatch("{accountId}")]
+        [HttpPatch("set-primary/{accountId}")]
         public async ValueTask<IActionResult> SetPrimaryAccount(Guid accountId)
         {
             try
