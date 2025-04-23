@@ -1,7 +1,7 @@
 ﻿using FinanceTracker.Domain.Enums;
 using CsvHelper.Configuration.Attributes;
 
-namespace FinanceTracker.Domain.Models.DTOs
+namespace FinanceTracker.Domain.Models.DTOs.TransactionDtos
 {
     public class TransactionDto
     {

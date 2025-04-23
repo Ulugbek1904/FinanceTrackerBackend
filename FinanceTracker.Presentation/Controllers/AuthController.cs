@@ -1,4 +1,4 @@
-﻿using FinanceTracker.Domain.Models.DTOs;
+﻿using FinanceTracker.Domain.Models.DTOs.AuthDtos;
 using FinanceTracker.Services.Foundations.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,4 +1,6 @@
-﻿namespace FinanceTracker.Domain.Models.DTOs
+﻿using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
+
+namespace FinanceTracker.Domain.Models.DTOs.ReportDtos
 {
     public class ReportResultDto
     {

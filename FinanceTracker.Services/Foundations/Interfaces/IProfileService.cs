@@ -1,6 +1,6 @@
-﻿using FinanceTracker.Domain.Models.DTOs;
-using FinanceTracker.Domain.Models;
+﻿using FinanceTracker.Domain.Models;
 using Microsoft.AspNetCore.Http;
+using FinanceTracker.Domain.Models.DTOs.AuthDtos;
 
 namespace FinanceTracker.Services.Foundations.Interfaces
 {

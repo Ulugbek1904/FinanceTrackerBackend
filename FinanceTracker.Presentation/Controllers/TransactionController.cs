@@ -1,6 +1,8 @@
 ﻿using CsvHelper;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs;
+using FinanceTracker.Domain.Models.DTOs.PageDto;
+using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -70,16 +72,19 @@ namespace FinanceTracker.Presentation.Controllers
 
         [HttpGet]
         [Route("transactions")]
-        public IActionResult GetAllTransactions()
+        public async ValueTask<IActionResult> GetAllTransactions([FromQuery] TransactionQueryDto queryDto)
         {
             try
             {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
                 var userId = GetUserId();
 
                 if (userId == null)
                     return Unauthorized();
 
-                var transactions = orchestration.RetrieveAllTransactions(userId.Value);
+                var transactions = await orchestration.RetrieveTransactionsWithQueryAsync(userId.Value, queryDto);
                 return Ok(transactions);
             }
             catch (Exception ex)

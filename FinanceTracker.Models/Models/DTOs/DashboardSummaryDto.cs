@@ -1,4 +1,7 @@
-﻿namespace FinanceTracker.Domain.Models.DTOs
+﻿using FinanceTracker.Domain.Models.DTOs.ReportDtos;
+using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
+
+namespace FinanceTracker.Domain.Models.DTOs
 {
     public class DashboardSummaryDto
     {

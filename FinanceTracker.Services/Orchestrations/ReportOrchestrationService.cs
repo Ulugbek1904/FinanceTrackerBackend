@@ -1,5 +1,6 @@
 ﻿using FinanceTracker.Domain.Enums;
-using FinanceTracker.Domain.Models.DTOs;
+using FinanceTracker.Domain.Models.DTOs.ReportDtos;
+using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
 using FinanceTracker.Services.Foundations;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;

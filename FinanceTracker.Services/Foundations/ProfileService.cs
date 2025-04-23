@@ -1,11 +1,11 @@
-﻿using FinanceTracker.Domain.Models.DTOs;
-using FinanceTracker.Domain.Models;
+﻿using FinanceTracker.Domain.Models;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Infrastructure.Providers.FileProvider;
 using Microsoft.AspNetCore.Identity;
+using FinanceTracker.Domain.Models.DTOs.AuthDtos;
 
 namespace FinanceTracker.Services.Foundations
 {

@@ -1,4 +1,4 @@
-﻿using FinanceTracker.Domain.Models.DTOs;
+﻿using FinanceTracker.Domain.Models.DTOs.ReportDtos;
 
 namespace FinanceTracker.Services.Orchestrations.Interfaces
 {

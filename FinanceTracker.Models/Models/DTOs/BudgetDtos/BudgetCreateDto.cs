@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FinanceTracker.Domain.Models.DTOs
+namespace FinanceTracker.Domain.Models.DTOs.BudgetDtos
 {
     public class BudgetCreateDto
     {

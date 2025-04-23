@@ -74,6 +74,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             modelBuilder.ApplyConfiguration(new CategoryConfiguration());
             modelBuilder.ApplyConfiguration(new AccountConfiguration());
             modelBuilder.ApplyConfiguration(new BudgetConfiguration());
+            modelBuilder.ApplyConfiguration(new RecurringTransactionConfiguration());
 
             modelBuilder.Entity<Account>()
                 .Property(a => a.Balance)
