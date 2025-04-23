@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using FinanceTracker.Domain.Models;
-using FinanceTracker.Domain.Models.DTOs;
+using FinanceTracker.Domain.Models.DTOs.BudgetDtos;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
 using Microsoft.EntityFrameworkCore;

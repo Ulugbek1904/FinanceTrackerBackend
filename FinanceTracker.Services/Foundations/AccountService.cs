@@ -42,7 +42,7 @@ namespace FinanceTracker.Services.Foundations
         public async ValueTask<Account> UpdateAccountBalanceAsync(Guid accountId, decimal amount)
         {
             var account = await this.storageBroker.SelectByIdAsync<Account>(accountId);
-            account.Balance += amount;
+            account.Balance = amount;
 
             return await this.storageBroker.UpdateAsync(account);
         }

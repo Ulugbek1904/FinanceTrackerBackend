@@ -1,4 +1,4 @@
-﻿using FinanceTracker.Domain.Models.DTOs;
+﻿using FinanceTracker.Domain.Models.DTOs.BudgetDtos;
 using FinanceTracker.Services.Foundations.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

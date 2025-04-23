@@ -9,7 +9,8 @@ using Microsoft.OpenApi.Models;
 using AspNetCoreRateLimit;
 using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
 using FinanceTracker.Presentation.Mappings;
-
+using FinanceTracker.Presentation.Validators;
+using FluentValidation;
 
 namespace FinanceTracker.Presentation
 {
@@ -18,6 +19,8 @@ namespace FinanceTracker.Presentation
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddValidatorsFromAssemblyContaining<TransactionQueryValidator>();
 
             builder.Services.AddDbContext<StorageBroker>(options =>
             {
@@ -33,6 +36,7 @@ namespace FinanceTracker.Presentation
             builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
             builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
             builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+            
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddApplicationService();

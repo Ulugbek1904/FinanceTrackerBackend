@@ -34,7 +34,7 @@ namespace FinanceTracker.Services.Foundations
                 .SelectByIdAsync<Transaction>(transaction.Id);
 
             if (existingTransaction == null)
-                throw new TransactionNotFoundException();
+                throw new TransactionNotFoundException("Transaction not found");
 
             this.aggregate.ValidateTransaction(transaction);
             await this.storageBroker.UpdateAsync(transaction);
@@ -48,7 +48,7 @@ namespace FinanceTracker.Services.Foundations
                 SelectByIdAsync<Transaction>(transactionId);
 
             if (transaction == null)
-                throw new TransactionNotFoundException();
+                throw new TransactionNotFoundException("Transaction not found");
 
             await this.storageBroker.DeleteAsync(transaction);
 

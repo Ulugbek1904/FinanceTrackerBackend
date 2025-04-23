@@ -1,4 +1,4 @@
-﻿namespace FinanceTracker.Domain.Models.DTOs
+﻿namespace FinanceTracker.Domain.Models.DTOs.AuthDtos
 {
     public class RefreshRequest
     {
