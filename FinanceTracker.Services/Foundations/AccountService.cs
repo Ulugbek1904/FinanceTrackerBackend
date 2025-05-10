@@ -1,4 +1,5 @@
 ﻿using FinanceTracker.Domain.Aggregates;
+using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
@@ -34,7 +35,7 @@ namespace FinanceTracker.Services.Foundations
                 .SelectByIdAsync<Account>(accountId);
 
             if( account is null)
-                throw new ArgumentNullException(nameof(accountId));
+                throw new AccountNullException("Account not Found");
 
             return account;
         }
@@ -52,7 +53,7 @@ namespace FinanceTracker.Services.Foundations
             var updatedAccount = await this.storageBroker.UpdateAsync(account);
 
             if (updatedAccount is null)
-                throw new ArgumentNullException(nameof(account));
+                throw new AppException("Account update failed.");
 
             return updatedAccount;
         }
@@ -62,7 +63,7 @@ namespace FinanceTracker.Services.Foundations
             var deletedAccount = await this.storageBroker.DeleteAsync(account);
 
             if (deletedAccount is null)
-                throw new ArgumentNullException(nameof(account));
+                throw new AppException("Account deletion failed.");
 
             return deletedAccount;
         }

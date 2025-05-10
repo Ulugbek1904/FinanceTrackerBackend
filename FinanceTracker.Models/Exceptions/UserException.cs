@@ -1,10 +1,11 @@
-﻿using Xeptions;
-
-namespace FinanceTracker.Domain.Exceptions
+﻿namespace FinanceTracker.Domain.Exceptions
 {
-    public class UserException : Xeption
+    public class UserException : AppException
     {
         public UserException(string message)
-            : base(message) { }
+            : base(message, 400, "https://httpstatuses.com/500") { }
+
+        public UserException(string message, Exception innerException)
+            : base(message, 400, "https://httpstatuses.com/500", innerException) { }
     }
 }
