@@ -1,7 +1,8 @@
-﻿using FinanceTracker.Domain.Models;
+﻿using FinanceTracker.Domain.Exceptions;
+using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Services.Foundations.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RESTFulSense.Controllers;
@@ -11,6 +12,7 @@ namespace FinanceTracker.Presentation.Controllers
 {
     [ApiController]
     [Route("api/accounts")]
+    [Authorize]
     public class AccountController : RESTFulController
     {
         private readonly IAccountService accountService;
@@ -23,206 +25,141 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpGet]
         public async ValueTask<IActionResult> GetAccountsAsync()
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
 
-                var accounts = await accountService
-                    .GetAccountsByUserId(userId.Value).ToListAsync();
+            var accounts = await accountService
+                .GetAccountsByUserId(userId.Value).ToListAsync();
 
-                return Ok(accounts);
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(accounts);
         }
 
         [HttpGet("{id}")]
         public async ValueTask<IActionResult> GetAccountByIdAsync([FromRoute] Guid id)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
 
-                var account = await accountService.GetAccountByIdAsync(id);
+            var account = await accountService.GetAccountByIdAsync(id);
 
-                if (account is null)
-                    return NotFound();
+            if (account.UserId != userId)
+                throw new ForbiddenAccessException();
 
-                if (account.UserId != userId)
-                    return Forbid();
-
-                return Ok(account);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(account);
         }
-
+        
         [HttpPost("create")]
         public async ValueTask<IActionResult> CreateAccountAsync([FromBody] CreateAccountDto accountDto)
         {
-            try
+
+            var userId = GetUserId();
+
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
+
+            var account = new Account
             {
-                var userId = GetUserId();
+                Balance = accountDto.Balance,
+                Name = accountDto.Name,
+                Type = accountDto.Type,
+                IsPrimary = accountDto.IsPrimary,
+                UserId = userId.Value
+            };
 
-                if (userId is null)
-                    return Unauthorized();
+            var createdAccount = await accountService.CreateAccountAsync(account);
 
-                var account = new Account
-                {
-                    Balance = accountDto.Balance,
-                    Name = accountDto.Name,
-                    Type = accountDto.Type,
-                    IsPrimary = accountDto.IsPrimary,
-                    UserId = userId.Value
-                };
+            if (createdAccount is null)
+                throw new AppException("Account creation failed.");
 
-                var createdAccount = await accountService.CreateAccountAsync(account);
-
-                if (createdAccount is null)
-                    return BadRequest("Account creation failed.");
-
-                return Created(createdAccount);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Created(createdAccount);
         }
-
+        // done
         [HttpPut("{id}/update-balance")]
-        public async ValueTask<IActionResult> UpdateAccountAsync(Guid categoryId, [FromBody] CreateAccountDto accountDto)
+        public async ValueTask<IActionResult> UpdateAccountAsync(Guid accountId, [FromBody] CreateAccountDto accountDto)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
 
-                var existingAccount = await accountService.GetAccountByIdAsync(categoryId);
+            var existingAccount = await accountService.GetAccountByIdAsync(accountId);
 
-                if (existingAccount is null)
-                    return NotFound();
+            if (existingAccount.UserId != userId)
+                throw new ForbiddenAccessException("You are not allowed to update this account.");
 
-                if (existingAccount.UserId != userId)
-                    return Forbid();
+            existingAccount.Balance = accountDto.Balance;
+            existingAccount.Name = accountDto.Name;
+            existingAccount.Type = accountDto.Type;
+            existingAccount.IsPrimary = accountDto.IsPrimary;
+            existingAccount.UserId = userId.Value;
 
-                existingAccount.Balance = accountDto.Balance;
-                existingAccount.Name = accountDto.Name;
-                existingAccount.Type = accountDto.Type;
-                existingAccount.IsPrimary = accountDto.IsPrimary;
-                existingAccount.UserId = userId.Value;
+            var updated = await accountService.UpdateAccountAsync(existingAccount);
 
-                var updated = await accountService.UpdateAccountAsync(existingAccount);
-
-                if (updated is null) return BadRequest(updated);
-
-                return Ok(updated);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(updated);
         }
 
         [HttpDelete("{accountId}")]
         public async ValueTask<IActionResult> DeleteAccountAsync(Guid accountId)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
 
-                var account = await accountService.GetAccountByIdAsync(accountId);
+            var account = await accountService.GetAccountByIdAsync(accountId);
 
-                if (account is null)
-                    return NotFound();
+            if (account.UserId != userId)
+                throw new ForbiddenAccessException("You are not allowed to delete this account.");
 
-                if(account.UserId != userId)
-                    return Forbid();
+            var deleted = await accountService.DeleteAccountAsync(account);
 
-                var deleted = await accountService.DeleteAccountAsync(account);
-                if (deleted is null) return BadRequest(deleted);
-
-                return Ok(deleted);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,ex.Message);
-            }
+            return Ok(deleted);
         }
 
         [HttpPatch("set-primary/{accountId}")]
         public async ValueTask<IActionResult> SetPrimaryAccount(Guid accountId)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
 
-                var existingAccount = await accountService.GetAccountByIdAsync(accountId);
+            var existingAccount = await accountService.GetAccountByIdAsync(accountId);
 
-                if(existingAccount is null)
-                    return NotFound();
+            if (existingAccount.UserId != userId)
+                throw new ForbiddenAccessException("You are not allowed to set this account as primary.");
 
-                if(existingAccount.UserId != userId)
-                    return Forbid();
+            existingAccount.IsPrimary = true;
 
-                existingAccount.IsPrimary = true;
+            await accountService.UpdateAccountAsync(existingAccount);
 
-                await accountService.UpdateAccountAsync(existingAccount);
-
-                return Ok(existingAccount);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(existingAccount);
         }
 
         [HttpPatch("{accountId}")]
         public async ValueTask<IActionResult> UpdateAccountBalance(Guid accountId, decimal balance)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException("User is not authorized.");
 
-                var existingAccount = await accountService.GetAccountByIdAsync(accountId);
+            var existingAccount = await accountService.GetAccountByIdAsync(accountId);
 
-                if (existingAccount is null)
-                    return NotFound();
+            if (existingAccount.UserId != userId)
+                throw new ForbiddenAccessException("You are not allowed to update this account.");
 
-                if (existingAccount.UserId != userId)
-                    return Forbid();
+            existingAccount.Balance = balance;
 
-                existingAccount.Balance = balance;
+            await accountService.UpdateAccountAsync(existingAccount);
 
-                await accountService.UpdateAccountAsync(existingAccount);
-
-                return Ok(existingAccount);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(existingAccount);
         }
+
         private Guid? GetUserId()
         {
             var userClaims = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -235,4 +172,5 @@ namespace FinanceTracker.Presentation.Controllers
             return null;
         }
     }
+
 }

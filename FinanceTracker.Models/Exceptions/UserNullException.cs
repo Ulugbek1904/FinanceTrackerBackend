@@ -1,9 +1,11 @@
-﻿using Xeptions;
-
-namespace FinanceTracker.Domain.Exceptions
+﻿namespace FinanceTracker.Domain.Exceptions
 {
-    public class UserNullException : Xeption
+    public class UserNullException : AppException
     {
-        public UserNullException() : base("User is null.") { }
+        public UserNullException()
+            : base("User is null.", 400, "https://httpstatuses.com/400") { }
+
+        public UserNullException(Exception innerException)
+            : base("User is null.", 400, "https://httpstatuses.com/400", innerException) { }
     }
 }

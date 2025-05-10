@@ -5,7 +5,6 @@ using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Serilog;
-using System.Security.Claims;
 
 namespace FinanceTracker.Services.Foundations
 {

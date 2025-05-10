@@ -148,7 +148,8 @@ namespace FinanceTracker.Services.Orchestrations
             return transaction;
         }
 
-        public async ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync(Guid userId, TransactionQueryDto queryDto)
+        public async ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync
+            (Guid userId, TransactionQueryDto queryDto)
         {
             try
             {

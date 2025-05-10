@@ -1,10 +1,8 @@
-﻿using Xeptions;
-
-namespace FinanceTracker.Domain.Exceptions
+﻿namespace FinanceTracker.Domain.Exceptions
 {
-    public class AccountValidationException : Xeption
+    public class AccountValidationException : AppException
     {
         public AccountValidationException(string message)
-                       : base(message) { }
+            : base(message, 400) { }
     }
 }

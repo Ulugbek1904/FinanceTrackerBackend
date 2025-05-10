@@ -1,16 +1,19 @@
-using FinanceTracker.Infrastructure.Brokers.Storages;
+using System.Text;
+using FluentValidation;
+using AspNetCoreRateLimit;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using FinanceTracker.Presentation.Mappings;
 using FinanceTracker.Presentation.Extensions;
 using FinanceTracker.Presentation.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.OpenApi.Models;
-using AspNetCoreRateLimit;
-using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
-using FinanceTracker.Presentation.Mappings;
 using FinanceTracker.Presentation.Validators;
-using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using FinanceTracker.Infrastructure.Brokers.Storages;
+using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
+using System.Net;
+
 
 namespace FinanceTracker.Presentation
 {
@@ -20,30 +23,78 @@ namespace FinanceTracker.Presentation
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddValidatorsFromAssemblyContaining<TransactionQueryValidator>();
-
+            // Db Context ------------>
             builder.Services.AddDbContext<StorageBroker>(options =>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.UseSqlServer(builder.Configuration
+                    .GetConnectionString("DefaultConnection"));
             });
 
+            // Fluent Validation and CORS -------------->
+            builder.Services.AddValidatorsFromAssemblyContaining
+                <TransactionQueryValidator>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAngularClient", policy =>
+                {
+                    policy.WithOrigins("http://localhost:4200")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
+            // Rate Limiting ---------------->
             builder.Services.AddMemoryCache();
 
             builder.Services.Configure<IpRateLimitOptions>
                 (builder.Configuration.GetSection("IpRateLimiting"));
 
-            builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
-            builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
-            builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-            builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
-            
+            builder.Services.AddSingleton<IIpPolicyStore,
+                MemoryCacheIpPolicyStore>();
 
+            builder.Services.AddSingleton<IRateLimitCounterStore, 
+                MemoryCacheRateLimitCounterStore>();
+
+            builder.Services.AddSingleton<IRateLimitConfiguration,
+                RateLimitConfiguration>();
+
+            builder.Services.AddSingleton<IProcessingStrategy,
+                AsyncKeyLockProcessingStrategy>();
+
+            // AutoMapper Custom service extension ----------------->
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddApplicationService();
+
+            // Controllers & Validation Error Handling----------------------->
             builder.Services.AddControllers();
 
-            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var errors = context.ModelState
+                        .Where(e => e.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(x => 
+                                x.ErrorMessage).ToArray()
+                        );
 
+                    var problemDetails = new ValidationProblemDetails(errors)
+                    {
+                        Title = "Invalid Model",
+                        Status = StatusCodes.Status400BadRequest,
+                        Type = "https://httpstatuses.com/400"
+                    };
+
+                    return new BadRequestObjectResult(problemDetails);
+                };
+            });
+
+            // Swagger ------------------------------------>
+            builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -54,7 +105,8 @@ namespace FinanceTracker.Presentation
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "JWT authorization using Bearer scheme. Example: \"Bearer {token}\"",
+                    Description = "JWT authorization using " +
+                        "Bearer scheme. Example: \"Bearer {token}\"",
                     Name = "Authorization",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey
@@ -76,44 +128,64 @@ namespace FinanceTracker.Presentation
                 });
             });
 
-            // JWT Authentication \
+            //Authentication & Authorization ------------------------>
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+            })
+                .AddJwtBearer(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-                };
-            });
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    };
+                });
 
             builder.Services.AddAuthorization();
 
+            // APP PIPELINE 
             var app = builder.Build();
 
+                 // Exception Middleware 
+            app.UseMiddleware<ProblemDetailsMiddleware>();
+
+                 //  CORS( localhost 4200 can access
+            app.UseCors("AllowAngularClient");
+
+                 //  Super Admin seed
             await AppDbInitializer.SeedSuperAdminAsync(app.Services);
 
+                //  Swagger 
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
+                //  Security
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
+
+                //  Rate Limiting
             app.UseIpRateLimiting();
+
+                //  Token Validation Middleware
             app.UseMiddleware<TokenValidationMiddleware>();
 
+                //  Controllers
             app.MapControllers();
 
             app.Run();
