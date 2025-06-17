@@ -7,7 +7,7 @@ A personal finance management API built with ASP.NET Core and Entity Framework. 
 ## 📌 Features
 
 - 🔐 User Registration and Authentication role based
-- 👤 Profile Update + Password Change
+- 👤 Profile Update + Password Change + Forgot Password(with SMTP)
 - 💸 Transaction Management 
 - 🗂️ Category Management 
 - 📊 Reports (Monthly Overview or given period, Net Balance)
