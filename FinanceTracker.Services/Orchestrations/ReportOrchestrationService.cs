@@ -89,8 +89,8 @@ namespace FinanceTracker.Services.Orchestrations
                     Amount = t.Amount,
                     TransactionDate = t.TransactionDate,
                     TransactionType = t.TransactionType,
-                    CategoryName = t.Category.Name,
-                    AccountName = t.Account.Name
+                    CategoryName = t.Category?.Name,
+                    AccountName = t.Account?.Name
                 }).ToList();
 
             return new ReportResultDto

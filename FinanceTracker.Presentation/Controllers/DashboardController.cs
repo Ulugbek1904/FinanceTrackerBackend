@@ -19,20 +19,13 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpGet("summary")]
         public async ValueTask<IActionResult> GetDashboardSummary()
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                return Unauthorized();
 
-                var dashboardData = await processingService.GetDashboardData(userId.Value);
-                return Ok(dashboardData);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            var dashboardData = await processingService.GetDashboardData(userId.Value);
+            return Ok(dashboardData);
         }
 
         private Guid? GetUserId()

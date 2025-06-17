@@ -4,7 +4,7 @@ namespace FinanceTracker.Services.Foundations.Interfaces
 {
     public interface IBudgetService
     {
-        Task<IEnumerable<BudgetDto>> RetrieveAllBudgetsAsync(Guid userId);
+        Task<IEnumerable<BudgetDto>> RetrieveAllBudgetsAsync(Guid? userId);
         ValueTask<BudgetDto?> RetrieveBudgetByIdAsync(Guid userId,Guid budgetId);
         ValueTask<BudgetDto> CreateBudgetAsync(Guid userId, BudgetCreateDto createDto);
         ValueTask<BudgetDto> UpdateBudgetAsync(Guid id, Guid userId, BudgetUpdateDto updateDto);

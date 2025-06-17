@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
 using System.Net;
+using Microsoft.Extensions.FileProviders;
 
 
 namespace FinanceTracker.Presentation
@@ -38,7 +39,7 @@ namespace FinanceTracker.Presentation
             {
                 options.AddPolicy("AllowAngularClient", policy =>
                 {
-                    policy.WithOrigins("http://localhost:4200")
+                    policy.WithOrigins("http://localhost:4200", "http://192.168.1.2:4200")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();
@@ -157,7 +158,15 @@ namespace FinanceTracker.Presentation
                  // Exception Middleware 
             app.UseMiddleware<ProblemDetailsMiddleware>();
 
-                 //  CORS( localhost 4200 can access
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                Path.Combine(Directory.GetCurrentDirectory(), "LocalFileStorage")),
+                RequestPath = "/profile-pictures"
+            });
+
+
+            //  CORS( localhost 4200 can access
             app.UseCors("AllowAngularClient");
 
                  //  Super Admin seed

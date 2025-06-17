@@ -1,5 +1,4 @@
 ﻿using FinanceTracker.Infrastructure.Brokers.Email;
-using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
 
 namespace FinanceTracker.Services.Foundations
@@ -21,12 +20,12 @@ namespace FinanceTracker.Services.Foundations
         {
             var user = await this.userService.GetUserByEmailAsync(email);
 
-            if (user == null || 
-                user.OtpExpiration < DateTime.UtcNow || 
+            if (user == null ||
+                user.OtpExpiration < DateTime.UtcNow ||
                 otpCode != user.PasswordResetOtp)
                 throw new UnauthorizedAccessException("Invalid code");
 
-            user.HashedPassword = newPassword;
+            user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword); 
             user.OtpExpiration = null;
             user.PasswordResetOtp = null;
 
@@ -36,9 +35,9 @@ namespace FinanceTracker.Services.Foundations
         public async ValueTask SendPasswordResetEmailAsync(string email)
         {
             var user = await this.userService.GetUserByEmailAsync(email);
-            if (user == null) return; // bu xavfni oldini olish uchun ya'ni bunday user bormi yo'qmi tekshirishni oldini oladi 
+            if (user == null) return;
 
-            string optCode = new Random().Next(100000,999999).ToString();
+            string optCode = new Random().Next(100000, 999999).ToString();
             user.PasswordResetOtp = optCode;
             user.OtpExpiration = DateTime.UtcNow.AddMinutes(30);
 

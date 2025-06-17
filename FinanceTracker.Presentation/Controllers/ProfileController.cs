@@ -54,11 +54,8 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpPost("upload-profile-picture")]
         public async ValueTask<IActionResult> UploadAvatar(IFormFile file)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var pictureUrl = await profileService.UploadProfilePictureAsync(file);
-
-            return Ok(new { PictureUrl = pictureUrl});
+            return Ok(new { pictureUrl = $"https://localhost:5192{pictureUrl}" }); 
         }
-
     }
 }

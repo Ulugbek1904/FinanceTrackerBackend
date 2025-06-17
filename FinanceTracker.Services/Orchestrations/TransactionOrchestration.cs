@@ -6,8 +6,8 @@ using FinanceTracker.Domain.Models.DTOs.PageDto;
 using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FinanceTracker.Services.Orchestrations
 {
@@ -17,53 +17,77 @@ namespace FinanceTracker.Services.Orchestrations
         private readonly IAccountService accountService;
         private readonly ITransactionService transactionService;
         private readonly IMapper mapper;
+        private readonly IBudgetService budgetService;
 
         public TransactionOrchestration(
             ICategoryService categoryService,
             IAccountService accountService,
             ITransactionService transactionService,
-            IMapper mapper)
+            IMapper mapper,
+            IBudgetService budgetService
+            )
         {
             this.categoryService = categoryService;
             this.accountService = accountService;
             this.transactionService = transactionService;
             this.mapper = mapper;
+            this.budgetService = budgetService;
         }
 
-        public async ValueTask<TransactionDto> AddTransactionAsync(Transaction transaction)
+        public async ValueTask<TransactionDto> AddTransactionAsync(Guid? userId, Transaction transaction)
         {
-            // Validating category existence
             var existingCategory = this.categoryService
                 .RetrieveAllCategories()
                 .FirstOrDefault(c => c.Id == transaction.CategoryId);
 
             if (existingCategory is null)
-                throw new InvalidOperationException("Category not found.");
+                throw new CategoryNotFoundException("Category not found.");
 
-            // Validating account existence
             var account = await this.accountService.GetAccountByIdAsync(transaction.AccountId);
             if (account is null)
-                throw new InvalidOperationException("Account not found.");
+                throw new AccountNullException("Account not found.");
+
+            var budgets = await budgetService.RetrieveAllBudgetsAsync(userId);
 
             bool isIncome = existingCategory.IsIncome;
 
             if(transaction.TransactionType != TransactionType.Expense 
                 && transaction.TransactionType != TransactionType.Income)
             {
-                throw new InvalidOperationException("Invalid transaction type. Must be Income(0) or Expense(1)");
+                throw new AppException("Invalid transaction type. Must be Income(0) or Expense(1)");
             }
 
-            if(transaction.TransactionType == TransactionType.Expense && isIncome ||
+            if(transaction.TransactionType == TransactionType.Expense && isIncome||
                 transaction.TransactionType == TransactionType.Income && !isIncome)
             {
-                throw new InvalidOperationException("Transaction type doesn't match category type. " +
+                throw new AppException("Transaction type doesn't match category type. " +
                     "Income transactions must use income categories and expense transactions must use expense categories");
             }
 
             if (transaction.TransactionType == TransactionType.Expense)
             {
+                var budget = budgets.FirstOrDefault(b => b.CategoryId == transaction.CategoryId);
+                if (budget is not null && transaction.TransactionDate >= budget.StartDate &&
+                    transaction.TransactionDate <= budget.EndDate)
+                {
+                    var totalExpenses = await transactionService.GetTotalExpensesByCategoryAsync(
+                        userId,
+                        transaction?.CategoryId,
+                        budget.StartDate,
+                        budget.EndDate);
+
+                    var newTotal = totalExpenses + transaction.Amount;
+
+                    if (newTotal > budget.LimitAmount)
+                    {
+                        throw new AppException($"Transaction exceeds budget limit for category {existingCategory.Name}. " +
+                            $"Budget limit: {budget.LimitAmount}, Current expenses: {totalExpenses}, Attempted: {transaction.Amount}");
+                    }
+                }
+
+
                 if (account.Balance < transaction.Amount)
-                    throw new InvalidOperationException("Insufficient funds.");
+                    throw new AppException("bu akkauntingda yetarlicha pul yo'q");
                 account.Balance -= transaction.Amount;
             }
             else if (transaction.TransactionType == TransactionType.Income)
@@ -149,57 +173,57 @@ namespace FinanceTracker.Services.Orchestrations
         }
 
         public async ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync
-            (Guid userId, TransactionQueryDto queryDto)
+           (Guid userId, TransactionQueryDto queryDto)
         {
-            try
+            int pageNumber = queryDto.PageNumber <= 0 ? 1 : queryDto.PageNumber;
+            int pageSize = queryDto.PageSize <= 0 ? 10 : queryDto.PageSize;
+            queryDto.PageSize = pageSize;
+            queryDto.PageNumber = pageNumber;
+
+            var query = this.transactionService.RetrieveAllTransactions(userId);
+
+            query = ApplyFiltering(query, queryDto);
+            query = ApplySorting(query, queryDto);
+
+            if (!string.IsNullOrEmpty(queryDto.Search))
             {
-                int pageNumber = queryDto.PageNumber <= 0 ? 1 : queryDto.PageNumber;
-                int pageSize = queryDto.PageSize <= 0 ? 10 : queryDto.PageSize;
-                queryDto.PageSize = pageSize;
-                queryDto.PageNumber = pageNumber;
+                query = query.Where(t => t.Description.Contains(queryDto.Search));
+            }
 
-                var query = this.transactionService.RetrieveAllTransactions(userId);
+            var totalCount = await query.CountAsync();
 
-                query = ApplyFiltering(query, queryDto);
-                query = ApplySorting(query, queryDto);
-
-                var totalCount = await query.CountAsync();
-
-                var transactions = await query
-                    .Skip((queryDto.PageNumber - 1) * queryDto.PageSize)
-                    .Take(queryDto.PageSize)
-                    .Select(t => new TransactionDto
-                    {
-                        Amount = t.Amount,
-                        TransactionDate = t.TransactionDate,
-                        Description = t.Description,
-                        TransactionType = t.TransactionType,
-                        AccountName = t.Account.Name,
-                        CategoryName = t.Category.Name
-                    })
-                    .ToListAsync();
-
-                return new PagedResult<TransactionDto>
+            var transactions = await query
+                .Skip((queryDto.PageNumber - 1) * queryDto.PageSize)
+                .Take(queryDto.PageSize)
+                .Select(t => new TransactionDto
                 {
-                    Items = transactions,
-                    TotalCount = totalCount,
-                    PageNumber = queryDto.PageNumber,
-                    PageSize = queryDto.PageSize
-                };
+                    Id = t.Id,
+                    Amount = t.Amount,
+                    TransactionDate = t.TransactionDate,
+                    Description = t.Description,
+                    TransactionType = t.TransactionType,
+                    AccountName = t.Account.Name,
+                    CategoryName = t.Category.Name
+                })
+                .ToListAsync();
 
-            }
-            catch (Exception ex)
+            return new PagedResult<TransactionDto>
             {
-                throw new TransactionNotFoundException("Transaction not found.", ex);
-            }
+                Items = transactions,
+                TotalCount = totalCount,
+                PageNumber = queryDto.PageNumber,
+                PageSize = queryDto.PageSize
+            };
         }
 
-        public IQueryable<Transaction> RetrieveAllTransactions(Guid userId)
+        public IQueryable<Transaction> RetrieveAllTransactions(Guid? userId)
         {
             if (userId == Guid.Empty)
-                throw new ArgumentException("Invalid user ID.", nameof(userId));
+                throw new AppException("Invalid user ID.");
 
-            var transactions = transactionService.RetrieveAllTransactions(userId);
+            var transactions = transactionService
+                .RetrieveAllTransactions(userId)
+                .AsNoTracking();
 
             if (!transactions.Any())
                 throw new TransactionNotFoundException("Transaction not found");
@@ -252,6 +276,34 @@ namespace FinanceTracker.Services.Orchestrations
                 transactions = transactions.Where(t => t.TransactionDate >= dto.StartDate && t.TransactionDate <= dto.EndDate);
 
             return transactions;
+        }
+
+        public async ValueTask<IEnumerable<TransactionDto>> GetTransactionsByBudgetAsync(
+                Guid userId, DateTime startDate, DateTime endDate, int categoryId)
+        {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("Invalid user ID.", nameof(userId));
+
+            var query = RetrieveAllTransactions(userId)
+                .Where(t => t.CategoryId == categoryId)
+                .Where(t => t.TransactionDate >= startDate && t.TransactionDate <= endDate)
+                .Select(t => new TransactionDto
+                {
+                    Id = t.Id,
+                    Description = t.Description,
+                    Amount = t.Amount,
+                    TransactionDate = t.TransactionDate,
+                    TransactionType = t.TransactionType,
+                    CategoryName = t.Category.Name, 
+                    AccountName = t.Account.Name           
+                });
+
+            var result = await query.ToListAsync();
+
+            if (!result.Any())
+                return [];
+
+            return result;
         }
     }
 

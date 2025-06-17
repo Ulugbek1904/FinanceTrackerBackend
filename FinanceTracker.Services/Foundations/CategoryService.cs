@@ -33,7 +33,7 @@ namespace FinanceTracker.Services.Foundations
                 logging.LogInformation("Category creation initiated");
 
                 if (category == null)
-                    throw new ArgumentNullException(nameof(category));
+                    throw new CategoryNotFoundException("Category not found");
 
                 category.CreatedAt = DateTime.UtcNow;
                 return await this.storageBroker.InsertAsync(category);
@@ -66,7 +66,8 @@ namespace FinanceTracker.Services.Foundations
                 logging.LogInformation($"Retrieving category with ID: {categoryId}");
 
                 if (categoryId == 0)
-                    throw new ArgumentNullException(nameof(categoryId));
+                    throw new CategoryNotFoundException
+                        ($"Not found category with ID : {categoryId}");
 
                 var category = await this.storageBroker.SelectCategoryByIdAsync(categoryId);
 

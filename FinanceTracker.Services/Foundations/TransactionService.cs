@@ -28,6 +28,16 @@ namespace FinanceTracker.Services.Foundations
             return transaction;
         }
 
+        public async ValueTask<decimal> GetTotalExpensesByCategoryAsync(Guid? userId, int? categoryId, DateTime startDate, DateTime endDate)
+        {
+            var transactions = await RetrieveAllTransactions(userId)
+                .Where(t => t.CategoryId == categoryId
+                    && t.TransactionDate >= startDate
+                    && t.TransactionDate <= endDate).ToListAsync();
+
+            return transactions.Sum(t => t.Amount);
+        }
+
         public async ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction)
         {
             var existingTransaction = await this.storageBroker
@@ -55,7 +65,7 @@ namespace FinanceTracker.Services.Foundations
             return transaction;
         }
 
-        public IQueryable<Transaction> RetrieveAllTransactions(Guid userId)
+        public IQueryable<Transaction> RetrieveAllTransactions(Guid? userId)
         {
             var transactions =  this.storageBroker.SelectAll<Transaction>()
                 .Where(t => t.Account.UserId == userId)

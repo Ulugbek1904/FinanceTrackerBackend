@@ -21,23 +21,16 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
         {
-            try
-            {
-                var response = await this.authService.LoginAsync(request.Email, request.Password);
+            var response = await this.authService.LoginAsync(request.Email, request.Password);
 
-                return Ok(response);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized("Invalid email or password");
-            }
+            return Ok(response);
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request )
         {
             var response = await this.authService.
-                RefreshTokenAsync(refreshToken);
+                RefreshTokenAsync(request.RefreshToken);
 
             return Ok(response);
         }
@@ -49,5 +42,10 @@ namespace FinanceTracker.Presentation.Controllers
             await this.authService.RevokeAsync();
             return NoContent();
         }
+    }
+
+    public class RefreshTokenRequest
+    {
+        public string RefreshToken { get; set; }
     }
 }

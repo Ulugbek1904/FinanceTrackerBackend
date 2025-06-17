@@ -5,6 +5,7 @@ namespace FinanceTracker.Domain.Models.DTOs.TransactionDtos
 {
     public class TransactionDto
     {
+        public Guid Id { get; set; }
         [Name("Nima uchun ishlatilgani")]
         public string Description { get; set; }
         [Name("Miqdori")]

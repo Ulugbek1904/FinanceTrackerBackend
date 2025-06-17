@@ -16,6 +16,7 @@ namespace FinanceTracker.Presentation.Extensions
     {
         public static IServiceCollection AddApplicationService(this IServiceCollection services)
         {
+            services.AddScoped<IBudgetCalculationService, BudgetCalculationService>();
             services.AddScoped<IBudgetService, BudgetService>();  
             services.AddScoped<ICategoryOrchestrationService, CategoryOrchestrationService>();
             services.AddScoped<IFileStorageProvider, LocalFileStorageProvider>();

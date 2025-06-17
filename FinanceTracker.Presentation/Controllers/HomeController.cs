@@ -39,6 +39,11 @@ namespace FinanceTracker.Presentation.Controllers
 
             var user = await this.userService.RetrieveUserByIdAsync(userId);
 
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var profilePictureUrl = string.IsNullOrEmpty(user.ProfilePictureUrl)
+                ? null
+                : $"{baseUrl}/profile-pictures/{Path.GetFileName(user.ProfilePictureUrl)}";
+
             var result = new
             {
                 user.Id,
@@ -50,10 +55,12 @@ namespace FinanceTracker.Presentation.Controllers
                 user.UpdatedAt,
                 user.IsActive,
                 user.Role,
-                user.HashedPassword
+                ProfilePictureUrl = profilePictureUrl
             };
 
             return Ok(result);
         }
+
+
     }
 }

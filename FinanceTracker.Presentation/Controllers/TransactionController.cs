@@ -1,8 +1,10 @@
 ﻿using CsvHelper;
+using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Domain.Models.DTOs.PageDto;
 using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
+using FinanceTracker.Services.Foundations;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -34,63 +36,43 @@ namespace FinanceTracker.Presentation.Controllers
         [Route("add")]
         public async ValueTask<IActionResult> CreateTransaction([FromBody] TransactionCreateDto transactionDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var userId = GetUserId();
 
-            try
+            if (userId == null)
+                throw new UnauthorizedAccessException();
+
+            var account = await accountService.GetAccountByIdAsync(transactionDto.AccountId);
+
+            if (account.UserId != userId)
+                throw new ForbiddenAccessException("The account does not belong to you");
+
+            var transaction = new Transaction
             {
-                var userId = GetUserId();
+                Id = Guid.NewGuid(),
+                Description = transactionDto.Description,
+                Amount = transactionDto.Amount,
+                TransactionDate = transactionDto.TransactionDate,
+                TransactionType = transactionDto.TransactionType,
+                CategoryId = transactionDto.CategoryId,
+                AccountId = transactionDto.AccountId,
+            };
 
-                if (userId == null)
-                    return Unauthorized();
+            var createdTransaction = await orchestration.AddTransactionAsync(userId, transaction);
 
-                var account = await accountService.GetAccountByIdAsync(transactionDto.AccountId);
-
-                if (account.UserId != userId)
-                    return BadRequest("The account does not belong to you");
-
-                var transaction = new Transaction
-                {
-                    Id = Guid.NewGuid(),
-                    Description = transactionDto.Description,
-                    Amount = transactionDto.Amount,
-                    TransactionDate = transactionDto.TransactionDate,
-                    TransactionType = transactionDto.TransactionType,
-                    CategoryId = transactionDto.CategoryId,
-                    AccountId = transactionDto.AccountId,
-                };
-
-                var createdTransaction = await orchestration.AddTransactionAsync(transaction);
-
-                return CreatedAtAction(nameof(CreateTransaction), createdTransaction);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return CreatedAtAction(nameof(CreateTransaction), createdTransaction);
         }
 
         [HttpGet]
-        [Route("transactions")]
+        [Route("all")]
         public async ValueTask<IActionResult> GetAllTransactions([FromQuery] TransactionQueryDto queryDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+            var userId = GetUserId();
 
-                var userId = GetUserId();
+            if (userId == null)
+                throw new UnauthorizedAccessException();
 
-                if (userId == null)
-                    return Unauthorized();
-
-                var transactions = await orchestration.RetrieveTransactionsWithQueryAsync(userId.Value, queryDto);
-                return Ok(transactions);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            var transactions = await orchestration.RetrieveTransactionsWithQueryAsync(userId.Value, queryDto);
+            return Ok(transactions);
         }
 
 
@@ -115,7 +97,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
 
-        [HttpPut("update-transaction/{id}")]
+        [HttpPut("update-transaction/{transactionId}")]
         public async ValueTask<IActionResult> UpdateTransaction(
             Guid transactionId, [FromBody] TransactionCreateDto transactionDto)
         {
@@ -148,11 +130,11 @@ namespace FinanceTracker.Presentation.Controllers
             }
         }
 
-        [HttpDelete("delete-transaction/{id}")]
+        [HttpDelete("delete-transaction/{transactionId}")]
         public async ValueTask<IActionResult> DeleteTransaction(Guid transactionId)
         {
             try
-            {
+            {   
                 var userId = GetUserId();
 
                 if (userId == null)
@@ -206,8 +188,18 @@ namespace FinanceTracker.Presentation.Controllers
             return File(memoryStream.ToArray(),"text/csv", fileName);
         }
 
+        [HttpGet("by-budget")]
+        public async ValueTask<IActionResult> GetTransactionsByBudget(
+            [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, [FromQuery] int categoryId)
+        {
+            var userIdentifier = GetUserId();
+            if (userIdentifier is null)
+                throw new UnauthorizedAccessException();
+            var userId = userIdentifier.Value;
 
-
+            var transactions = await orchestration.GetTransactionsByBudgetAsync(userId, startDate, endDate, categoryId);
+            return Ok(transactions);
+        }
 
         private Guid? GetUserId()
         {

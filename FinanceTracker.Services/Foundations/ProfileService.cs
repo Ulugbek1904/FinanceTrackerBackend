@@ -6,6 +6,7 @@ using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Infrastructure.Providers.FileProvider;
 using Microsoft.AspNetCore.Identity;
 using FinanceTracker.Domain.Models.DTOs.AuthDtos;
+using FinanceTracker.Domain.Exceptions;
 
 namespace FinanceTracker.Services.Foundations
 {
@@ -14,6 +15,9 @@ namespace FinanceTracker.Services.Foundations
         private readonly IStorageBroker storageBroker;
         private readonly IHttpContextAccessor contextAccessor;
         private readonly IFileStorageProvider fileStorage;
+
+        private const string ImageStoragePath = @"D:\ForMyProjects\FinanceTracker\FinanceTrackerBackend\FinanceTracker.Presentation\LocalFileStorage";
+        private const string ImageRequestPath = "/profile-pictures";
 
         public ProfileService(
             IStorageBroker storageBroker,
@@ -66,40 +70,51 @@ namespace FinanceTracker.Services.Foundations
 
         public async ValueTask<string> UploadProfilePictureAsync(IFormFile file)
         {
-            if(file == null || file.Length == 0)
-                throw new ArgumentNullException("File is missing");
+            if (file == null || file.Length == 0)
+                throw new AppException("Fayl topilmadi.");
 
-            const long maxSize = 5 * 1024 * 1024; // 2 MB
+            const long maxSize = 5 * 1024 * 1024; // 5 MB
             if (file.Length > maxSize)
-                throw new ArgumentOutOfRangeException("File size is too large");
+                throw new AppException("Fayl hajmi juda katta.");
 
             var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
             if (!allowedExtensions.Contains(fileExtension))
-            {
-                throw new InvalidOperationException($"Type of file is not allowed" +
-                    $". Allowed types : {string.Join(", ",allowedExtensions)}");
-            }
+                throw new AppException("Faqat .png, .jpg, .jpeg ruxsat etiladi.");
 
             var userIdClaim = contextAccessor.HttpContext?
                 .User.FindFirst(ClaimTypes.NameIdentifier);
 
-            if(userIdClaim == null)
-                throw new UnauthorizedAccessException("User not found");
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException("Foydalanuvchi aniqlanmadi.");
 
             var userId = Guid.Parse(userIdClaim.Value);
             var user = await storageBroker.SelectByIdAsync<User>(userId);
 
-            if(!string.IsNullOrEmpty(user.ProfilePictureUrl))
+            if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
             {
-                await fileStorage.DeleteFileAsync(user.ProfilePictureUrl);
+                var fileNameToDelete = Path.GetFileName(user.ProfilePictureUrl);
+                var filePathToDelete = Path.Combine(ImageStoragePath, fileNameToDelete);
+
+                if (File.Exists(filePathToDelete))
+                    File.Delete(filePathToDelete);
             }
 
-            user.ProfilePictureUrl = await fileStorage.UploadFileAsync(file);
+            var newFileName = $"{Guid.NewGuid()}{fileExtension}";
+            var savePath = Path.Combine(ImageStoragePath, newFileName);
+
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var imageUrl = $"{ImageRequestPath}/{newFileName}";
+            user.ProfilePictureUrl = imageUrl;
+
             await storageBroker.UpdateAsync(user);
 
-            return user.ProfilePictureUrl;
+            return imageUrl;
         }
 
         public bool Verify(string old, string _new)

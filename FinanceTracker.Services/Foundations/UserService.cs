@@ -60,7 +60,7 @@ namespace FinanceTracker.Services.Foundations
             var users = this.storageBroker.SelectAll<User>();
 
             if(users.Count() == 0)
-                throw new Exception("User list is empty");
+                throw new AppException("User list is empty");
 
             return users;
         }
