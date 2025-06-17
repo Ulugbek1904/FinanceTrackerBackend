@@ -40,16 +40,27 @@ namespace FinanceTracker.Services.Foundations
 
         public async ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction)
         {
-            var existingTransaction = await this.storageBroker
-                .SelectByIdAsync<Transaction>(transaction.Id);
+            this.aggregate.ValidateTransaction(transaction);
+
+            var existingTransaction = await this.storageBroker.SelectAll<Transaction>()
+                .FirstOrDefaultAsync(t => t.Id == transaction.Id);
 
             if (existingTransaction == null)
                 throw new TransactionNotFoundException("Transaction not found");
 
-            this.aggregate.ValidateTransaction(transaction);
-            await this.storageBroker.UpdateAsync(transaction);
+            existingTransaction.Description = transaction.Description;
+            existingTransaction.Amount = transaction.Amount;
+            existingTransaction.TransactionDate = transaction.TransactionDate;
+            existingTransaction.TransactionType = transaction.TransactionType;
+            existingTransaction.CategoryId = transaction.CategoryId;
+            existingTransaction.AccountId = transaction.AccountId;
 
-            return transaction;
+            var updatedTransaction = await this.storageBroker.UpdateAsync(existingTransaction);
+            if (updatedTransaction == null)
+                throw new TransactionNotFoundException("Transaction could not be updated");
+
+            Console.WriteLine($"Tranzaksiya yangilandi: ID={updatedTransaction.Id}, Amount={updatedTransaction.Amount}");
+            return updatedTransaction;
         }
 
         public async ValueTask<Transaction> RemoveTransactionByIdAsync(Guid transactionId)
@@ -75,9 +86,17 @@ namespace FinanceTracker.Services.Foundations
             return transactions;
         }
 
-        public ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId)
+        public async ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId)
         {
-            return this.storageBroker.SelectByIdAsync<Transaction>(transactionId);
+            var transaction = await this.storageBroker.SelectAll<Transaction>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == transactionId);
+
+            if (transaction == null)
+                throw new InvalidOperationException($"Transaction with ID {transactionId} not found.");
+
+            Console.WriteLine($"Retrieved transaction: ID={transaction.Id}, AVX={transaction.Amount}");
+            return transaction;
         }
     }
 }

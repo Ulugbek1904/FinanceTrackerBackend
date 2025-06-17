@@ -2,6 +2,7 @@
 using FinanceTracker.Infrastructure.Brokers.Storages.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.Security.Principal;
 
 namespace FinanceTracker.Infrastructure.Brokers.Storages
 {

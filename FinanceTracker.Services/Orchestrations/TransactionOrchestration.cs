@@ -4,10 +4,12 @@ using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs.PageDto;
 using FinanceTracker.Domain.Models.DTOs.TransactionDtos;
+using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Services.Foundations.Interfaces;
 using FinanceTracker.Services.Orchestrations.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinanceTracker.Services.Orchestrations
 {
@@ -18,13 +20,17 @@ namespace FinanceTracker.Services.Orchestrations
         private readonly ITransactionService transactionService;
         private readonly IMapper mapper;
         private readonly IBudgetService budgetService;
+        private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly StorageBroker storageBroker;
 
         public TransactionOrchestration(
             ICategoryService categoryService,
             IAccountService accountService,
             ITransactionService transactionService,
             IMapper mapper,
-            IBudgetService budgetService
+            IBudgetService budgetService,
+            IHttpContextAccessor httpContextAccessor,
+            StorageBroker storageBroker
             )
         {
             this.categoryService = categoryService;
@@ -32,6 +38,8 @@ namespace FinanceTracker.Services.Orchestrations
             this.transactionService = transactionService;
             this.mapper = mapper;
             this.budgetService = budgetService;
+            this.httpContextAccessor = httpContextAccessor;
+            this.storageBroker = storageBroker;
         }
 
         public async ValueTask<TransactionDto> AddTransactionAsync(Guid? userId, Transaction transaction)
@@ -104,36 +112,107 @@ namespace FinanceTracker.Services.Orchestrations
 
         public async ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction)
         {
+            var user = this.httpContextAccessor.HttpContext?.User;
+            var userId = Guid.Parse(user?.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
             var existingTransaction = await this.transactionService.RetrieveTransactionByIdAsync(transaction.Id);
             if (existingTransaction == null)
                 throw new InvalidOperationException("Transaction not found.");
 
-            var account = await this.accountService.GetAccountByIdAsync(transaction.AccountId);
-            if (account == null)
-                throw new InvalidOperationException("Account not found.");
+            Console.WriteLine($"Eski tranzaksiya: ID={existingTransaction.Id}, Amount={existingTransaction.Amount}, Type={existingTransaction.TransactionType}, AccountId={existingTransaction.AccountId}");
+            Console.WriteLine($"Yangi tranzaksiya: ID={transaction.Id}, Amount={transaction.Amount}, Type={transaction.TransactionType}, AccountId={transaction.AccountId}");
+
+            var currentAccount = await this.accountService.GetAccountByIdAsync(existingTransaction.AccountId);
+            if (currentAccount == null)
+                throw new InvalidOperationException("Current account not found.");
+
+            var newAccount = existingTransaction.AccountId == transaction.AccountId
+                ? currentAccount
+                : await this.accountService.GetAccountByIdAsync(transaction.AccountId);
+            if (newAccount == null)
+                throw new InvalidOperationException("New account not found.");
+
+            var existingCategory = this.categoryService
+                .RetrieveAllCategories()
+                .FirstOrDefault(c => c.Id == transaction.CategoryId);
+            if (existingCategory == null)
+                throw new CategoryNotFoundException("Category not found.");
+
+            var budgets = await budgetService.RetrieveAllBudgetsAsync(userId);
+            bool isIncome = existingCategory.IsIncome;
+
+            if (transaction.TransactionType != TransactionType.Expense && transaction.TransactionType != TransactionType.Income)
+                throw new AppException("Invalid transaction type. Must be Income(0) or Expense(1)");
+
+            if (transaction.TransactionType == TransactionType.Expense && isIncome ||
+                transaction.TransactionType == TransactionType.Income && !isIncome)
+                throw new AppException("Transaction type doesn't match category type. " +
+                    "Income transactions must use income categories and expense transactions must use expense categories");
 
             if (existingTransaction.TransactionType == TransactionType.Expense)
             {
-                account.Balance += existingTransaction.Amount; 
+                currentAccount.Balance += existingTransaction.Amount; 
+                Console.WriteLine($"Eski chiqim qaytarildi: AccountId={currentAccount.Id}, Balans={currentAccount.Balance}");
             }
             else if (existingTransaction.TransactionType == TransactionType.Income)
             {
-                account.Balance -= existingTransaction.Amount; 
+                currentAccount.Balance -= existingTransaction.Amount;
+                Console.WriteLine($"Eski kirim olib tashlandi: AccountId={currentAccount.Id}, Balans={currentAccount.Balance}");
             }
 
             if (transaction.TransactionType == TransactionType.Expense)
             {
-                if (account.Balance < transaction.Amount)
-                    throw new InvalidOperationException("Insufficient funds.");
-                account.Balance -= transaction.Amount;
+                var budget = budgets.FirstOrDefault(b => b.CategoryId == transaction.CategoryId);
+                if (budget != null && transaction.TransactionDate >= budget.StartDate &&
+                    transaction.TransactionDate <= budget.EndDate)
+                {
+                    var totalExpenses = await transactionService.GetTotalExpensesByCategoryAsync(
+                        userId, transaction.CategoryId, budget.StartDate, budget.EndDate);
+
+                    totalExpenses -= (existingTransaction.TransactionType == TransactionType.Expense && existingTransaction.AccountId == transaction.AccountId)
+                        ? existingTransaction.Amount
+                        : 0;
+
+                    var newTotal = totalExpenses + transaction.Amount;
+                    if (newTotal > budget.LimitAmount)
+                        throw new AppException($"Transaction exceeds budget limit for category {existingCategory.Name}. " +
+                            $"Budget limit: {budget.LimitAmount}, Current expenses: {totalExpenses}, Attempted: {transaction.Amount}");
+                }
+
+                if (newAccount.Balance < transaction.Amount)
+                    throw new AppException($"Yangi hisobda (AccountId={newAccount.Id}) yetarlicha pul yo‘q. Balans: {newAccount.Balance}, Talab qilingan: {transaction.Amount}");
+
+                newAccount.Balance -= transaction.Amount; 
+                Console.WriteLine($"Yangi chiqim qo‘llanildi: AccountId={newAccount.Id}, Balans={newAccount.Balance}");
             }
             else if (transaction.TransactionType == TransactionType.Income)
             {
-                account.Balance += transaction.Amount;
+                newAccount.Balance += transaction.Amount; 
+                Console.WriteLine($"Yangi kirim qo‘llanildi: AccountId={newAccount.Id}, Balans={newAccount.Balance}");
             }
 
-            await this.accountService.UpdateAccountBalanceAsync(account.Id, account.Balance);
-            return await transactionService.ModifyTransactionAsync(transaction);
+            using (var dbContextTransaction = await this.storageBroker.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    if (existingTransaction.AccountId != transaction.AccountId)
+                    {
+                        await this.accountService.UpdateAccountBalanceAsync(currentAccount.Id, currentAccount.Balance);
+                    }
+
+                    await this.accountService.UpdateAccountBalanceAsync(newAccount.Id, newAccount.Balance);
+
+                    var updatedTransaction = await transactionService.ModifyTransactionAsync(transaction);
+
+                    await dbContextTransaction.CommitAsync();
+                    return updatedTransaction;
+                }
+                catch
+                {
+                    await dbContextTransaction.RollbackAsync();
+                    throw;
+                }
+            }
         }
 
         public async ValueTask<Transaction> RemoveTransactionByIdAsync(Guid transactionId)
@@ -157,19 +236,6 @@ namespace FinanceTracker.Services.Orchestrations
 
             await this.accountService.UpdateAccountBalanceAsync(account.Id, account.Balance);
             return await transactionService.RemoveTransactionByIdAsync(transactionId);
-        }
-
-        public async ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId)
-        {
-            if (transactionId == Guid.Empty)
-                throw new ArgumentException("Invalid transaction ID.", nameof(transactionId));
-
-            var transaction = await transactionService.RetrieveTransactionByIdAsync(transactionId);
-
-            if (transaction is null)
-                throw new TransactionNotFoundException("Transaction not found");
-
-            return transaction;
         }
 
         public async ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync

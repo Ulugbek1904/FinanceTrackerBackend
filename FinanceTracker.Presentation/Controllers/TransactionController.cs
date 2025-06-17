@@ -23,13 +23,16 @@ namespace FinanceTracker.Presentation.Controllers
     {
         private readonly ITransactionOrchestration orchestration;
         private readonly IAccountService accountService;
+        private readonly ITransactionService transactionService;
 
         public TransactionController(
             ITransactionOrchestration orchestration,
-            IAccountService accountService)
+            IAccountService accountService,
+            ITransactionService transactionService)
         {
             this.orchestration = orchestration;
             this.accountService = accountService;
+            this.transactionService = transactionService;
         }
 
         [HttpPost]
@@ -79,21 +82,14 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpGet("transaction-by-id/{id:guid}")]
         public async ValueTask<IActionResult> GetTransactionById(Guid id)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId == null)
-                    return Unauthorized();
+            if (userId == null)
+                return Unauthorized();
 
-                var transaction = await orchestration.RetrieveTransactionByIdAsync(id);
+            var transaction = await transactionService.RetrieveTransactionByIdAsync(id);
 
-                return Ok(transaction);
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,ex.Message);
-            }
+            return Ok(transaction);
         }
 
 
@@ -101,33 +97,29 @@ namespace FinanceTracker.Presentation.Controllers
         public async ValueTask<IActionResult> UpdateTransaction(
             Guid transactionId, [FromBody] TransactionCreateDto transactionDto)
         {
-            if(!ModelState.IsValid)
-                return BadRequest();
-            try
+            var userId = GetUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            var existingTransaction = await transactionService.RetrieveTransactionByIdAsync(transactionId);
+            if (existingTransaction == null)
+                return NotFound("Transaction not found.");
+
+            var updatedTransaction = new Transaction
             {
-                var userId = GetUserId();
+                Id = transactionId,
+                Description = transactionDto.Description,
+                Amount = transactionDto.Amount,
+                TransactionDate = transactionDto.TransactionDate,
+                TransactionType = transactionDto.TransactionType,
+                CategoryId = transactionDto.CategoryId,
+                AccountId = transactionDto.AccountId
+            };
 
-                if (userId == null)
-                    return Unauthorized();
+            var result = await orchestration.ModifyTransactionAsync(updatedTransaction);
 
-                var existingTransaction = await 
-                    orchestration.RetrieveTransactionByIdAsync(transactionId);
-
-                existingTransaction.Amount = transactionDto.Amount;
-                existingTransaction.TransactionDate = transactionDto.TransactionDate;
-                existingTransaction.TransactionType = transactionDto.TransactionType;
-                existingTransaction.CategoryId = transactionDto.CategoryId;
-                existingTransaction.AccountId = transactionDto.AccountId;
-                existingTransaction.Description = transactionDto.Description;
-
-                var updatedTransaction = await orchestration.ModifyTransactionAsync(existingTransaction);
-
-                return Ok(updatedTransaction);
-            }
-            catch(Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(result);
         }
 
         [HttpDelete("delete-transaction/{transactionId}")]
@@ -140,8 +132,8 @@ namespace FinanceTracker.Presentation.Controllers
                 if (userId == null)
                     return Unauthorized();
 
-                var transaction = await 
-                    orchestration.RetrieveTransactionByIdAsync(transactionId);
+                var transaction = await
+                    transactionService.RetrieveTransactionByIdAsync(transactionId);
 
                 if (transaction is null)
                     return NotFound();

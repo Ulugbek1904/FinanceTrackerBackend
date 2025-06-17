@@ -11,7 +11,6 @@ namespace FinanceTracker.Services.Orchestrations.Interfaces
         public ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync(
                 Guid userId, TransactionQueryDto queryDto);
         public ValueTask<TransactionDto> AddTransactionAsync(Guid? userId, Transaction transaction);
-        public ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId);
         public IQueryable<Transaction> RetrieveAllTransactions(Guid? userId);
         public ValueTask<Transaction> RemoveTransactionByIdAsync(Guid transactionId);
         public ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction);
