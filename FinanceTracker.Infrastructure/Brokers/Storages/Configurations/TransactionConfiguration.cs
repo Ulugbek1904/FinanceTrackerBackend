@@ -15,7 +15,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages.Configurations
             builder.HasOne(t => t.Account)
                 .WithMany(a => a.Transactions)
                 .HasForeignKey(t => t.AccountId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Cascade); 
 
             builder.HasOne(t => t.Category)
                 .WithMany(c => c.Transactions)

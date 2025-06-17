@@ -3,6 +3,7 @@ using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Infrastructure.Providers.AuthProvider;
 using FinanceTracker.Services.Foundations.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -37,6 +38,7 @@ namespace FinanceTracker.Services.Foundations
             if (!isValidPassword)
                 throw new UnauthorizedAccessException("Invalid credentials");
 
+
             var accessToken = this.provider.GenerateJwtToken(user);
             var refreshToken = this.provider.GenerateRefreshToken();
 
@@ -45,7 +47,7 @@ namespace FinanceTracker.Services.Foundations
 
             await this.userService.ModifyUserAsync(user);
 
-            return new AuthResponse
+            return  new AuthResponse
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
@@ -71,7 +73,7 @@ namespace FinanceTracker.Services.Foundations
             {
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
-                AccessTokenExpiryDate = DateTime.UtcNow.AddMinutes(15)
+                AccessTokenExpiryDate = DateTime.UtcNow.AddMinutes(30)
             };
         }
 
@@ -92,5 +94,8 @@ namespace FinanceTracker.Services.Foundations
 
             await this.userService.ModifyUserAsync(user);
         }
+
     }
+
+    
 }

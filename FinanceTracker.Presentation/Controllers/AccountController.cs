@@ -77,9 +77,8 @@ namespace FinanceTracker.Presentation.Controllers
 
             return Created(createdAccount);
         }
-        // done
-        [HttpPut("{id}/update-balance")]
-        public async ValueTask<IActionResult> UpdateAccountAsync(Guid accountId, [FromBody] CreateAccountDto accountDto)
+        [HttpPut("{accountId}/update-balance")]
+        public async ValueTask<IActionResult> UpdateAccountAsync([FromRoute] Guid accountId, [FromBody] CreateAccountDto accountDto)
         {
             var userId = GetUserId();
 
@@ -103,7 +102,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpDelete("{accountId}")]
-        public async ValueTask<IActionResult> DeleteAccountAsync(Guid accountId)
+        public async ValueTask<IActionResult> DeleteAccountAsync([FromRoute] Guid accountId)
         {
             var userId = GetUserId();
 
@@ -121,7 +120,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("set-primary/{accountId}")]
-        public async ValueTask<IActionResult> SetPrimaryAccount(Guid accountId)
+        public async ValueTask<IActionResult> SetPrimaryAccount([FromRoute] Guid accountId)
         {
             var userId = GetUserId();
 
@@ -141,7 +140,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("{accountId}")]
-        public async ValueTask<IActionResult> UpdateAccountBalance(Guid accountId, decimal balance)
+        public async ValueTask<IActionResult> UpdateAccountBalance([FromRoute] Guid accountId, decimal balance)
         {
             var userId = GetUserId();
 

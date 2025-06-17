@@ -6,10 +6,13 @@ namespace FinanceTracker.Services.Orchestrations.Interfaces
 {
     public interface ITransactionOrchestration
     {
-        ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync(Guid userId, TransactionQueryDto queryDto);
-        ValueTask<TransactionDto> AddTransactionAsync(Transaction transaction);
+        ValueTask<IEnumerable<TransactionDto>> GetTransactionsByBudgetAsync(
+                Guid userId, DateTime startDate, DateTime endDate, int categoryId);
+        public ValueTask<PagedResult<TransactionDto>> RetrieveTransactionsWithQueryAsync(
+                Guid userId, TransactionQueryDto queryDto);
+        public ValueTask<TransactionDto> AddTransactionAsync(Guid? userId, Transaction transaction);
         public ValueTask<Transaction> RetrieveTransactionByIdAsync(Guid transactionId);
-        public IQueryable<Transaction> RetrieveAllTransactions(Guid userId);
+        public IQueryable<Transaction> RetrieveAllTransactions(Guid? userId);
         public ValueTask<Transaction> RemoveTransactionByIdAsync(Guid transactionId);
         public ValueTask<Transaction> ModifyTransactionAsync(Transaction transaction);
 

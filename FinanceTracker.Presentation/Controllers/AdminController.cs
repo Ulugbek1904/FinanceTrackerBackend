@@ -1,4 +1,5 @@
 ﻿using FinanceTracker.Domain.Enums;
+using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs;
 using FinanceTracker.Services.Foundations.Interfaces;
@@ -59,31 +60,14 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPost("create-user")]
-        //[Authorize(Roles = "SuperAdmin, Admin")]
+        //[Authorize(Roles = "SuperAdmin")]
         public async ValueTask<IActionResult> RegisterUser(CreateUserDto userDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    message = "Invalid input data",
-                    result = false,
-                    data = (object)null
-                });
-            }
-
             var adminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
             var admin = await userService.RetrieveUserByIdAsync(adminId);
             if (admin == null)
-            {
-                return Unauthorized(new
-                {
-                    message = "Admin not authorized",
-                    result = false,
-                    data = (object)null
-                });
-            }
+                throw new ForbiddenAccessException("you are not admin");
 
             var existedUser = await userService.GetUserByEmailAsync(userDto.Email);
             if (existedUser is not null)
@@ -129,7 +113,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("block-user/{userId}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        //[Authorize(Roles = "SuperAdmin,Admin")]
         public async ValueTask<ActionResult> BlockUser(Guid userId)
         {
             await adminService.BlockUserAsync(userId);
@@ -138,7 +122,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("unblock-user/{userId}")]
-        [Authorize(Roles = "SuperAdmin")]
+        //[Authorize(Roles = "SuperAdmin")]
         public async ValueTask<ActionResult> UnblockUser(Guid userId)
         {
             await adminService.UnBlockUserAsync(userId);
@@ -146,7 +130,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("update-role/{userId}")]
-        [Authorize(Roles = "SuperAdmin")]
+        //[Authorize(Roles = "SuperAdmin")]
         public async ValueTask<ActionResult> UpdateRole(Guid userId, Role role)
         {
             await adminService.UpdateUserRoleAsync(userId, role);

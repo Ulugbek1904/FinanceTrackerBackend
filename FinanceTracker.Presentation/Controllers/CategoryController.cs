@@ -30,150 +30,109 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpGet("all")]
         public async ValueTask<IActionResult> GetCategoriesAsync()
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException();
 
-                var categories = await categoryOrchestration.
-                    RetrieveCategoriesByUserId(userId.Value).ToListAsync();
+            var categories = await categoryOrchestration.
+                RetrieveCategoriesByUserId(userId.Value).ToListAsync();
 
-                return Ok(categories);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(categories);
         }
 
         [HttpGet("{id}")]
         public async ValueTask<IActionResult> GetCategoryByIdAsync([FromRoute] int id)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException();
 
-                var category = await categoryOrchestration.
-                    RetrieveCategoriesByUserId(userId.Value).FirstOrDefaultAsync(c => c.Id == id);
+            var category = await categoryOrchestration.
+                RetrieveCategoriesByUserId(userId.Value).FirstOrDefaultAsync(c => c.Id == id);
 
-                if (category is null)
-                    return NotFound();
+            if (category is null)
+                throw new CategoryNotFoundException("Category not found");
 
-                return Ok(category);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(category);
         }
 
         [HttpPost("create-category")]
         public async ValueTask<IActionResult> PostCategoryAsync([FromBody] CategoryDto categoryDto)
         {
-            try
+            var userId = GetUserId();
+
+            if (userId is null)
+                throw new UnauthorizedAccessException();
+
+            var categories = await categoryOrchestration
+                .RetrieveCategoriesByUserId(userId.Value)
+                .ToListAsync();
+
+            var existingCategory = categories
+                .FirstOrDefault(c => c.Name == categoryDto.Name);
+
+            if (existingCategory != null)
             {
-                var userId = GetUserId();
-
-                if (userId is null)
-                    return Unauthorized();
-
-                var categories = await categoryOrchestration
-                    .RetrieveCategoriesByUserId(userId.Value)
-                    .ToListAsync();
-
-                var existingCategory = categories
-                    .FirstOrDefault(c => c.Name == categoryDto.Name);
-
-                if (existingCategory != null)
-                {
-                    return BadRequest("Category already exists");
-                }
-
-                var category = new Category
-                {
-                    Name = categoryDto.Name,
-                    IsIncome = categoryDto.IsIncome,
-                    UserId = userId,
-                    IsDefault = false,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                var created = await this.categoryOrchestration.
-                    AddCategoryAsync(userId.Value, category);
-
-                return Created(created);
-
+                throw new AppException("Category already exists");
             }
-            catch(Exception ex)
+
+            var category = new Category
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+                Name = categoryDto.Name,
+                IsIncome = categoryDto.IsIncome,
+                UserId = userId,
+                IsDefault = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var created = await this.categoryOrchestration.
+                AddCategoryAsync(userId.Value, category);
+
+            return Created(created);
         }
 
-        [HttpPut("update")]
-        public async ValueTask<IActionResult> UpdateCategoryAsync(int id,[FromBody] CategoryDto categoryDto)
+        [HttpPut("update/{id}")]
+        public async ValueTask<IActionResult> UpdateCategoryAsync([FromRoute]int id,[FromBody] CategoryDto categoryDto)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
+            if (userId is null)
+                throw new UnauthorizedAccessException();
 
-                var existingCategory = await categoryService.RetrieveCategoryByIdAsync(id);
+            var existingCategory = await categoryService.RetrieveCategoryByIdAsync(id);
 
-                if (existingCategory is null || existingCategory.UserId != userId)
-                    return NotFound();
+            if (existingCategory is null)
+                throw new CategoryNotFoundException($"Not found category with ID : {existingCategory.Id}");
 
-                existingCategory.Name = categoryDto.Name;
-                existingCategory.IsIncome = categoryDto.IsIncome;
-                existingCategory.UpdatedAt = DateTime.UtcNow;
+            if (existingCategory.UserId != userId)
+                throw new UnauthorizedAccessException();
 
-                var updated = await categoryOrchestration.UpdateCategoryAsync(userId.Value, existingCategory);
-                return Ok(updated);
-            }
-            catch (UnauthorizedAccessException uex)
-            {
-                return Forbid(uex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            existingCategory.Name = categoryDto.Name;
+            existingCategory.IsIncome = categoryDto.IsIncome;
+            existingCategory.UpdatedAt = DateTime.UtcNow;
+
+            var updated = await categoryOrchestration.UpdateCategoryAsync(userId.Value, existingCategory);
+            return Ok(updated);
         }
 
         [HttpDelete("{id}")]
         public async ValueTask<IActionResult> DeleteCategoryAsync([FromRoute] int id)
         {
-            try
-            {
-                var userId = GetUserId();
+            var userId = GetUserId();
 
-                if (userId is null)
-                    return Unauthorized();
-                var category = await categoryService.RetrieveCategoryByIdAsync(id);
+            if (userId is null)
+                throw new UnauthorizedAccessException();
+            var category = await categoryService.RetrieveCategoryByIdAsync(id);
 
-                if(category.IsDefault)
-                    return BadRequest("Cannot delete default category");
+            if (category.IsDefault)
+                throw new UnauthorizedAccessException("Cannot delete default category");
 
-                var deleted = await categoryOrchestration.RemoveCategoryByIdAsync(userId.Value, id);
+            var deleted = await categoryOrchestration.RemoveCategoryByIdAsync(userId.Value, id);
 
-                return Ok(deleted);
-            }
-            catch (UnauthorizedAccessException uex)
-            {
-                return Forbid(uex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
+            return Ok(deleted);
         }
 
         private Guid? GetUserId()

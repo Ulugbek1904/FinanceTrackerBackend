@@ -13,7 +13,9 @@ namespace FinanceTracker.Presentation.Mappings
         {
             // Budget
             CreateMap<Budget, BudgetDto>()
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
+                .ReverseMap()
+                .ForMember(dest => dest.Category, opt => opt.Ignore());
 
             CreateMap<BudgetCreateDto, Budget>();
             CreateMap<BudgetUpdateDto, Budget>();

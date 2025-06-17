@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FinanceTracker.Domain.Exceptions;
 using FinanceTracker.Domain.Models;
 using FinanceTracker.Domain.Models.DTOs.BudgetDtos;
 using FinanceTracker.Infrastructure.Brokers.Storages;
@@ -28,7 +29,7 @@ namespace FinanceTracker.Services.Foundations
                 .SelectCategoryByIdAsync(createDto.CategoryId);
 
             if (category is null)
-                throw new ArgumentNullException("Category not found");
+                throw new CategoryNotFoundException("Category not found");
 
             budget.Category = category;
 
@@ -39,7 +40,9 @@ namespace FinanceTracker.Services.Foundations
 
         public async ValueTask<bool> DeleteBudgetAsync(Guid userId, Guid budgetId)
         {
-            var budget = await RetrieveBudgetByIdAsync(userId, budgetId);
+            var budget = await this.storageBroker.SelectAll<Budget>()
+                .Where(b => b.UserId == userId && b.Id == budgetId)
+                .FirstOrDefaultAsync();
 
             if (budget is null)
                 return false;
@@ -49,7 +52,7 @@ namespace FinanceTracker.Services.Foundations
             return true;
         }
 
-        public async Task<IEnumerable<BudgetDto>> RetrieveAllBudgetsAsync(Guid userId)
+        public async Task<IEnumerable<BudgetDto>> RetrieveAllBudgetsAsync(Guid? userId)
         {
             var budgets = await this.storageBroker.SelectAll<Budget>()
                 .Include(b => b.Category)
@@ -77,12 +80,11 @@ namespace FinanceTracker.Services.Foundations
                 .FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId);
 
             if (existingBudget is null)
-                throw new ArgumentNullException("Not found");
+                throw new AppException("Budget Not found");
 
             mapper.Map(updateDto, existingBudget);
             await storageBroker.UpdateAsync(existingBudget);
 
-            // Reload with related data
             var updatedBudget = await storageBroker.SelectAll<Budget>()
                 .Include(b => b.Category)
                 .FirstAsync(b => b.Id == id);
