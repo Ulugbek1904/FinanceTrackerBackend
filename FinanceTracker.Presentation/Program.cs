@@ -156,6 +156,7 @@ namespace FinanceTracker.Presentation
             var app = builder.Build();
 
             app.UseMiddleware<ProblemDetailsMiddleware>();
+            app.UseRouting();
 
             var storagePath = "/app/LocalFileStorage";
             if (!Directory.Exists(storagePath))
@@ -176,7 +177,7 @@ namespace FinanceTracker.Presentation
             await AppDbInitializer.SeedSuperAdminAsync(app.Services);
 
                 //  Swagger 
-            if (app.Environment.IsDevelopment())
+            if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
