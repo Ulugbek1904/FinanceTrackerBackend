@@ -26,6 +26,9 @@ RUN dotnet publish "./FinanceTracker.Presentation.csproj" -c $BUILD_CONFIGURATIO
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
+# Create LocalFileStorage directory in the final image
+RUN mkdir -p /app/LocalFileStorage
+
 # Copy published app
 COPY --from=publish /app/publish .
 
