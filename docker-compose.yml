@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  financetracker.presentation:
+    container_name: finance-tracker
+    build:
+      context: .
+      dockerfile: FinanceTracker.Presentation/Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - DATABASE_URL=postgresql://financetrackerdb_b2g4_user:DTXWlfQhycREOdSsuF3MorvH1v6XiUKW@dpg-d193u6h5pdvs73dtje30-a.oregon-postgres.render.com/financetrackerdb_b2g4
+      - PORT=${PORT:-8080}
+    

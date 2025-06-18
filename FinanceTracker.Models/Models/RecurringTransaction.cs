@@ -16,12 +16,12 @@ namespace FinanceTracker.Domain.Models
         public Guid AccountId { get; set; }
         public Account Account { get; set; }
 
-        public DateTime StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.UtcNow;
+        public DateTime? EndDate { get; set; } = DateTime.UtcNow;
 
         public RecurringType RecurrenceType { get; set; }
 
         public bool IsIncome { get; set; }
-        public DateTime? LastProcessedDate { get; set; }
+        public DateTime? LastProcessedDate { get; set; } = DateTime.UtcNow;
     }
 }

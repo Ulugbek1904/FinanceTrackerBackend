@@ -2,7 +2,7 @@
 using FinanceTracker.Infrastructure.Brokers.Storages.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System.Security.Principal;
+
 
 namespace FinanceTracker.Infrastructure.Brokers.Storages
 {
@@ -64,7 +64,7 @@ namespace FinanceTracker.Infrastructure.Brokers.Storages
             if (!optionsBuilder.IsConfigured)
             {
                 string connectionString = this.configuration.GetConnectionString("DefaultConnection");
-                optionsBuilder.UseSqlServer(connectionString);
+                optionsBuilder.UseNpgsql(connectionString);
             }
         }
 
