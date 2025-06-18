@@ -39,7 +39,8 @@ namespace FinanceTracker.Presentation
             {
                 options.AddPolicy("AllowAngularClient", policy =>
                 {
-                    policy.WithOrigins("https://finance-tracker-latest-coiu.onrender.com", "http://localhost:4200")
+                    policy.WithOrigins("https://finance-tracker-latest-coiu.onrender.com",
+                        "http://localhost:4200", "https://finance-tracker-fronted.vercel.app")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();
