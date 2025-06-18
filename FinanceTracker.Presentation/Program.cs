@@ -173,7 +173,7 @@ namespace FinanceTracker.Presentation
             // Super Admin seed
             await AppDbInitializer.SeedSuperAdminAsync(app.Services);
 
-            // Swagger (faqat development va production uchun)
+            // Swagger
             if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {
                 app.UseSwagger();
@@ -181,7 +181,7 @@ namespace FinanceTracker.Presentation
             }
 
             // Security
-            app.UseHttpsRedirection(); // Faqat bir marta ishlatilsin
+            app.UseHttpsRedirection(); 
             app.UseAuthentication();
             app.UseAuthorization();
 
