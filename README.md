@@ -6,19 +6,20 @@ A personal finance management API built with ASP.NET Core and Entity Framework. 
 
 ## 📌 Features
 
-- 🔐 User Registration and Authentication
-- 👤 Profile Update + Password Change
-- 💸 Transaction Management (Add, Edit, Delete)
-- 🗂️ Category Management (Income & Expense)
-- 📊 Reports (Monthly Overview, Net Balance)
-- 📈 Dashboard Summary (Income, Expenses)
+- 🔐 User Registration and Authentication role based
+- 👤 Profile Update + Password Change + Forgot Password(with SMTP)
+- 💸 Transaction Management 
+- 🗂️ Category Management 
+- 📊 Reports (Monthly Overview or given period, Net Balance)
+- 📈 Dashboard Summary (Income, Expenses, chart, top Categories, recent Transactions)
 - 🖼️ Profile Picture Upload
+- 💸 Budget Management
 
 ---
 
 ## 🚀 Tech Stack
 
-- ASP.NET Core MVC
+- ASP.NET Core
 - Entity Framework Core
 - PostgreSQL / SQL Server
 - RESTFulSense for standardized responses
