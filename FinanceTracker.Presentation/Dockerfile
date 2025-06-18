@@ -6,7 +6,7 @@ WORKDIR /src
 # Copy project files in the correct order
 COPY ["FinanceTracker.Presentation/FinanceTracker.Presentation.csproj", "FinanceTracker.Presentation/"]
 COPY ["FinanceTracker.Infrastructure/FinanceTracker.Infrastructure.csproj", "FinanceTracker.Infrastructure/"]
-COPY ["FinanceTracker.Domain/FinanceTracker.Domain.csproj", "FinanceTracker.Domain/"]
+COPY ["FinanceTracker.Models/FinanceTracker.Domain.csproj", "FinanceTracker.Domain/"]
 COPY ["FinanceTracker.Services/FinanceTracker.Services.csproj", "FinanceTracker.Services/"]
 
 # Restore dependencies
