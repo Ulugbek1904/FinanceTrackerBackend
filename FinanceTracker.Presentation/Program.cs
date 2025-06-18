@@ -23,7 +23,7 @@ namespace FinanceTracker.Presentation
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.WebHost.UseUrls("http://+:8080");
             // Db Context ------------>
             builder.Services.AddDbContext<StorageBroker>(options =>
             {
@@ -152,7 +152,6 @@ namespace FinanceTracker.Presentation
 
             builder.Services.AddAuthorization();
 
-            // APP PIPELINE 
             var app = builder.Build();
 
             app.UseMiddleware<ProblemDetailsMiddleware>();
@@ -169,36 +168,30 @@ namespace FinanceTracker.Presentation
                 RequestPath = "/profile-pictures"
             });
 
-
-            //  CORS( localhost 4200 can access
             app.UseCors("AllowAngularClient");
 
-                 //  Super Admin seed
+            // Super Admin seed
             await AppDbInitializer.SeedSuperAdminAsync(app.Services);
 
-                //  Swagger 
+            // Swagger (faqat development va production uchun)
             if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            else
-            {
-                app.UseHttpsRedirection();
-            }
 
-                //  Security
-            app.UseHttpsRedirection();
+            // Security
+            app.UseHttpsRedirection(); // Faqat bir marta ishlatilsin
             app.UseAuthentication();
             app.UseAuthorization();
 
-                //  Rate Limiting
+            // Rate Limiting
             app.UseIpRateLimiting();
 
-                //  Token Validation Middleware
+            // Token Validation Middleware
             app.UseMiddleware<TokenValidationMiddleware>();
 
-                //  Controllers
+            // Controllers
             app.MapControllers();
 
             app.Run();
