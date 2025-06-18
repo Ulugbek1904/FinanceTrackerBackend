@@ -16,8 +16,8 @@ namespace FinanceTracker.Services.Foundations
         private readonly IHttpContextAccessor contextAccessor;
         private readonly IFileStorageProvider fileStorage;
 
-        private const string ImageStoragePath = @"D:\ForMyProjects\FinanceTracker\FinanceTrackerBackend\FinanceTracker.Presentation\LocalFileStorage";
-        private const string ImageRequestPath = "/profile-pictures";
+        private readonly string ImageStoragePath = "/app/LocalFileStorage";
+        private readonly string ImageRequestPath = "/profile-pictures";
 
         public ProfileService(
             IStorageBroker storageBroker,
@@ -109,12 +109,12 @@ namespace FinanceTracker.Services.Foundations
                 await file.CopyToAsync(stream);
             }
 
-            var imageUrl = $"{ImageRequestPath}/{newFileName}";
+            var imageUrl = $"/{ImageRequestPath}/{newFileName}";
             user.ProfilePictureUrl = imageUrl;
 
             await storageBroker.UpdateAsync(user);
 
-            return imageUrl;
+            return $"https://finance-tracker-latest-coiu.onrender.com{imageUrl}";
         }
 
         public bool Verify(string old, string _new)

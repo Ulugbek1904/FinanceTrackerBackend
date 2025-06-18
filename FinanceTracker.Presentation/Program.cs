@@ -27,7 +27,7 @@ namespace FinanceTracker.Presentation
             // Db Context ------------>
             builder.Services.AddDbContext<StorageBroker>(options =>
             {
-                options.UseSqlServer(builder.Configuration
+                options.UseNpgsql(builder.Configuration
                     .GetConnectionString("DefaultConnection"));
             });
 
@@ -39,7 +39,7 @@ namespace FinanceTracker.Presentation
             {
                 options.AddPolicy("AllowAngularClient", policy =>
                 {
-                    policy.WithOrigins("http://localhost:4200", "http://192.168.1.2:4200")
+                    policy.WithOrigins("https://finance-tracker-latest-coiu.onrender.com", "http://localhost:4200")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();
@@ -155,13 +155,16 @@ namespace FinanceTracker.Presentation
             // APP PIPELINE 
             var app = builder.Build();
 
-                 // Exception Middleware 
             app.UseMiddleware<ProblemDetailsMiddleware>();
 
+            var storagePath = "/app/LocalFileStorage";
+            if (!Directory.Exists(storagePath))
+            {
+                Directory.CreateDirectory(storagePath);
+            }
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(
-                Path.Combine(Directory.GetCurrentDirectory(), "LocalFileStorage")),
+                FileProvider = new PhysicalFileProvider(storagePath),
                 RequestPath = "/profile-pictures"
             });
 

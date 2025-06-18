@@ -10,8 +10,8 @@ namespace FinanceTracker.Domain.Models
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "Limit amount must be greater than 0.")]
         public decimal LimitAmount { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.UtcNow;
+        public DateTime EndDate { get; set; } = DateTime.UtcNow;
         public int CategoryId { get; set; }
         public Category Category { get; set; }
     }

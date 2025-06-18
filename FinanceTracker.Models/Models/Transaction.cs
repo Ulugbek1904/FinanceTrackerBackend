@@ -14,7 +14,7 @@ namespace FinanceTracker.Domain.Models
         public decimal Amount { get; set; }
 
         [Required]
-        public DateTime TransactionDate { get; set; }
+        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
         public TransactionType TransactionType { get; set; }
 
         [Required]

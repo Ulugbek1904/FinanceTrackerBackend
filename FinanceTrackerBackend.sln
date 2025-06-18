@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinanceTracker.Domain", "Fi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinanceTracker.Infrastructure", "FinanceTracker.Infrastructure\FinanceTracker.Infrastructure.csproj", "{D8C9D2B2-8C1B-433C-A2AA-1F9E56F78A2A}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{0DCDAE9B-A31E-452D-A666-51432CDFCAA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{D8C9D2B2-8C1B-433C-A2AA-1F9E56F78A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8C9D2B2-8C1B-433C-A2AA-1F9E56F78A2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8C9D2B2-8C1B-433C-A2AA-1F9E56F78A2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DCDAE9B-A31E-452D-A666-51432CDFCAA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DCDAE9B-A31E-452D-A666-51432CDFCAA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DCDAE9B-A31E-452D-A666-51432CDFCAA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DCDAE9B-A31E-452D-A666-51432CDFCAA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
