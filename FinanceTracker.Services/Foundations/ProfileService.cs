@@ -109,12 +109,12 @@ namespace FinanceTracker.Services.Foundations
                 await file.CopyToAsync(stream);
             }
 
-            var imageUrl = $"/{ImageRequestPath}/{newFileName}";
+            var imageUrl = $"{ImageRequestPath}/{newFileName}";
             user.ProfilePictureUrl = imageUrl;
 
             await storageBroker.UpdateAsync(user);
 
-            return $"https://finance-tracker-latest-coiu.onrender.com{imageUrl}";
+            return $"https://financetrackerbackend-1tp6.onrender.com/{imageUrl}";
         }
 
         public bool Verify(string old, string _new)

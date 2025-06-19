@@ -32,7 +32,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpGet("users")]
-        //[Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public IActionResult GetUsers([FromQuery] string? search, [FromQuery] bool? isActive)
         {
 
@@ -60,7 +60,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPost("create-user")]
-        //[Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin")]
         public async ValueTask<IActionResult> RegisterUser(CreateUserDto userDto)
         {
             var adminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -104,7 +104,7 @@ namespace FinanceTracker.Presentation.Controllers
 
 
         [HttpDelete("delete-user/{userId}")]
-        //[Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin")]
         public async ValueTask<ActionResult> DeleteUser(Guid userId)
         {
             await userService.RemoveUserByIdAsync(userId);
@@ -113,7 +113,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("block-user/{userId}")]
-        //[Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async ValueTask<ActionResult> BlockUser(Guid userId)
         {
             await adminService.BlockUserAsync(userId);
@@ -122,7 +122,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("unblock-user/{userId}")]
-        //[Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin")]
         public async ValueTask<ActionResult> UnblockUser(Guid userId)
         {
             await adminService.UnBlockUserAsync(userId);
@@ -130,7 +130,7 @@ namespace FinanceTracker.Presentation.Controllers
         }
 
         [HttpPatch("update-role/{userId}")]
-        //[Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin")]
         public async ValueTask<ActionResult> UpdateRole(Guid userId, Role role)
         {
             await adminService.UpdateUserRoleAsync(userId, role);
