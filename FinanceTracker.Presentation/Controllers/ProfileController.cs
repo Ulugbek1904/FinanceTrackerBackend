@@ -55,7 +55,7 @@ namespace FinanceTracker.Presentation.Controllers
         public async ValueTask<IActionResult> UploadAvatar(IFormFile file)
         {
             var pictureUrl = await profileService.UploadProfilePictureAsync(file);
-            return Ok(new { pictureUrl = $"https://localhost:5192{pictureUrl}" }); 
+            return Ok(new { pictureUrl = $"https://financetrackerbackend-1tp6.onrender.com/{pictureUrl}" }); 
         }
     }
 }
