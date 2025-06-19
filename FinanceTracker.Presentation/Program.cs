@@ -158,16 +158,16 @@ namespace FinanceTracker.Presentation
         app.UseMiddleware<ProblemDetailsMiddleware>();
         app.UseRouting();
 
-        var storagePath = "/app/LocalFileStorage";
-        if (!Directory.Exists(storagePath))
-        {
-            Directory.CreateDirectory(storagePath);
-        }
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(storagePath),
-            RequestPath = "/profile-pictures"
-        });
+        //var storagePath = "/app/LocalFileStorage";
+        //if (!Directory.Exists(storagePath))
+        //{
+        //    Directory.CreateDirectory(storagePath);
+        //}
+        //app.UseStaticFiles(new StaticFileOptions
+        //{
+        //    FileProvider = new PhysicalFileProvider(storagePath),
+        //    RequestPath = "/profile-pictures"
+        //});
 
         app.UseCors("AllowAngularClient");
 

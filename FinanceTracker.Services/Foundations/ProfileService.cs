@@ -27,9 +27,9 @@ namespace FinanceTracker.Services.Foundations
             this.storageBroker = storageBroker;
             this.contextAccessor = contextAccessor;
 
-            var cloudName = configuration["CLOUDINARY_CLOUD_NAME"];
-            var apiKey = configuration["CLOUDINARY_API_KEY"];
-            var apiSecret = configuration["CLOUDINARY_API_SECRET"];
+            var cloudName = "df45qvvl2";
+            var apiKey = "473725967346327";
+            var apiSecret = "1foYLN68QToXK7yh-VuAk5BYdmA";
 
             var account = new CloudinaryDotNet.Account(cloudName, apiKey, apiSecret);
             this.cloudinary = new Cloudinary(account);
@@ -72,41 +72,60 @@ namespace FinanceTracker.Services.Foundations
 
         public async ValueTask<string> UploadProfilePictureAsync(IFormFile file)
         {
-            if (file == null || file.Length == 0)
-                throw new AppException("Fayl topilmadi.");
-
-            const long maxSize = 5 * 1024 * 1024; // 5 MB
-            if (file.Length > maxSize)
-                throw new AppException("Fayl hajmi juda katta.");
-
-            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLower();
-
-            if (!allowedExtensions.Contains(fileExtension))
-                throw new AppException("Faqat .png, .jpg, .jpeg ruxsat etiladi.");
-
-            var userIdClaim = contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
-
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("Foydalanuvchi aniqlanmadi.");
-
-            var userId = Guid.Parse(userIdClaim.Value);
-            var user = await storageBroker.SelectByIdAsync<User>(userId);
-
-            using var stream = file.OpenReadStream();
-            var uploadParams = new ImageUploadParams
+            try
             {
-                File = new FileDescription(file.FileName, stream),
-                PublicId = $"{userId}_{Guid.NewGuid()}{fileExtension}" 
-            };
-            var uploadResult = await cloudinary.UploadAsync(uploadParams);
+                if (file == null || file.Length == 0)
+                    throw new AppException("Fayl topilmadi.");
 
-            var imageUrl = uploadResult.SecureUrl.AbsoluteUri; 
-            user.ProfilePictureUrl = imageUrl;
+                const long maxSize = 5 * 1024 * 1024; // 5 MB
+                if (file.Length > maxSize)
+                    throw new AppException("Fayl hajmi juda katta.");
 
-            await storageBroker.UpdateAsync(user);
+                var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
-            return imageUrl;
+                if (!allowedExtensions.Contains(fileExtension))
+                    throw new AppException("Faqat .png, .jpg, .jpeg ruxsat etiladi.");
+
+                var userIdClaim = contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
+
+                if (userIdClaim == null)
+                    throw new UnauthorizedAccessException("Foydalanuvchi aniqlanmadi.");
+
+                var userId = Guid.Parse(userIdClaim.Value);
+                var user = await storageBroker.SelectByIdAsync<User>(userId);
+
+                // Log before upload to verify file and credentials
+                Console.WriteLine($"Uploading file: {file.FileName}, Size: {file.Length}, UserId: {userId}");
+
+                // Upload to Cloudinary
+                using var stream = file.OpenReadStream();
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(file.FileName, stream),
+                    PublicId = $"{userId}_{Guid.NewGuid()}{fileExtension}" // Unique ID
+                };
+                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+                if (uploadResult.Error != null)
+                {
+                    Console.WriteLine($"Cloudinary Error: {uploadResult.Error.Message}");
+                    throw new Exception($"Cloudinary upload failed: {uploadResult.Error.Message}");
+                }
+
+                var imageUrl = uploadResult.SecureUrl.AbsoluteUri; // HTTPS URL from Cloudinary
+                user.ProfilePictureUrl = imageUrl;
+
+                await storageBroker.UpdateAsync(user);
+
+                Console.WriteLine($"Upload successful, URL: {imageUrl}");
+                return imageUrl;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in UploadProfilePictureAsync: {ex.Message} - {ex.StackTrace}");
+                throw; // Re-throw to let the controller handle it
+            }
         }
 
         public bool Verify(string old, string _new)

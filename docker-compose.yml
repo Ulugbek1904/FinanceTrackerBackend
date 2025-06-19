@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   financetracker.presentation:
     container_name: finance-tracker

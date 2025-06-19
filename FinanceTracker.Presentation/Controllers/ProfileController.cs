@@ -54,8 +54,16 @@ namespace FinanceTracker.Presentation.Controllers
         [HttpPost("upload-profile-picture")]
         public async ValueTask<IActionResult> UploadAvatar(IFormFile file)
         {
-            var pictureUrl = await profileService.UploadProfilePictureAsync(file);
-            return Ok(new { pictureUrl = $"{pictureUrl}" }); 
+            try
+            {
+                var pictureUrl = await profileService.UploadProfilePictureAsync(file);
+                return Ok(new { pictureUrl = pictureUrl });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UploadAvatar Error: {ex.Message} - {ex.StackTrace}");
+                return StatusCode(500, new { error = "Internal server error during upload. Please try again later." });
+            }
         }
     }
 }
