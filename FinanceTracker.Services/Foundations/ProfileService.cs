@@ -7,6 +7,9 @@ using FinanceTracker.Infrastructure.Providers.FileProvider;
 using Microsoft.AspNetCore.Identity;
 using FinanceTracker.Domain.Models.DTOs.AuthDtos;
 using FinanceTracker.Domain.Exceptions;
+using CloudinaryDotNet.Actions;
+using CloudinaryDotNet;
+using Microsoft.Extensions.Configuration;
 
 namespace FinanceTracker.Services.Foundations
 {
@@ -14,25 +17,27 @@ namespace FinanceTracker.Services.Foundations
     {
         private readonly IStorageBroker storageBroker;
         private readonly IHttpContextAccessor contextAccessor;
-        private readonly IFileStorageProvider fileStorage;
-
-        private readonly string ImageStoragePath = "/app/LocalFileStorage";
-        private readonly string ImageRequestPath = "/profile-pictures";
+        private readonly Cloudinary cloudinary; // 
 
         public ProfileService(
             IStorageBroker storageBroker,
             IHttpContextAccessor contextAccessor,
-            IFileStorageProvider fileStorage)
+            IConfiguration configuration) 
         {
             this.storageBroker = storageBroker;
             this.contextAccessor = contextAccessor;
-            this.fileStorage = fileStorage;
+
+            var cloudName = configuration["CLOUDINARY_CLOUD_NAME"];
+            var apiKey = configuration["CLOUDINARY_API_KEY"];
+            var apiSecret = configuration["CLOUDINARY_API_SECRET"];
+
+            var account = new CloudinaryDotNet.Account(cloudName, apiKey, apiSecret);
+            this.cloudinary = new Cloudinary(account);
         }
 
         public async Task<User> ChangePasswordAsync(ChangePasswordDto passwordDto)
         {
-            var userIdClaim = contextAccessor.HttpContext?
-                .User.FindFirst(ClaimTypes.NameIdentifier);
+            var userIdClaim = contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
 
             if (userIdClaim == null)
                 throw new UnauthorizedAccessException("User not found");
@@ -41,22 +46,19 @@ namespace FinanceTracker.Services.Foundations
 
             var user = await storageBroker.SelectByIdAsync<User>(userId);
 
-            var isVerified = BCrypt.Net.BCrypt
-                .Verify(passwordDto.OldPassword, user.HashedPassword);
+            var isVerified = BCrypt.Net.BCrypt.Verify(passwordDto.OldPassword, user.HashedPassword);
 
             if (!isVerified)
             {
                 throw new UnauthorizedAccessException("Password is incorrect");
             }
 
-            user.HashedPassword = BCrypt.Net
-                .BCrypt.HashPassword(passwordDto.NewPassword);
+            user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(passwordDto.NewPassword);
 
             await storageBroker.UpdateAsync(user);
 
             return user;
         }
-
 
         public async ValueTask<User> UpdateProfileAsync(Guid userId, string firstName, string lastName)
         {
@@ -83,8 +85,7 @@ namespace FinanceTracker.Services.Foundations
             if (!allowedExtensions.Contains(fileExtension))
                 throw new AppException("Faqat .png, .jpg, .jpeg ruxsat etiladi.");
 
-            var userIdClaim = contextAccessor.HttpContext?
-                .User.FindFirst(ClaimTypes.NameIdentifier);
+            var userIdClaim = contextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
 
             if (userIdClaim == null)
                 throw new UnauthorizedAccessException("Foydalanuvchi aniqlanmadi.");
@@ -92,29 +93,20 @@ namespace FinanceTracker.Services.Foundations
             var userId = Guid.Parse(userIdClaim.Value);
             var user = await storageBroker.SelectByIdAsync<User>(userId);
 
-            if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+            using var stream = file.OpenReadStream();
+            var uploadParams = new ImageUploadParams
             {
-                var fileNameToDelete = Path.GetFileName(user.ProfilePictureUrl);
-                var filePathToDelete = Path.Combine(ImageStoragePath, fileNameToDelete);
+                File = new FileDescription(file.FileName, stream),
+                PublicId = $"{userId}_{Guid.NewGuid()}{fileExtension}" 
+            };
+            var uploadResult = await cloudinary.UploadAsync(uploadParams);
 
-                if (File.Exists(filePathToDelete))
-                    File.Delete(filePathToDelete);
-            }
-
-            var newFileName = $"{Guid.NewGuid()}{fileExtension}";
-            var savePath = Path.Combine(ImageStoragePath, newFileName);
-
-            using (var stream = new FileStream(savePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var imageUrl = $"{ImageRequestPath}/{newFileName}";
+            var imageUrl = uploadResult.SecureUrl.AbsoluteUri; 
             user.ProfilePictureUrl = imageUrl;
 
             await storageBroker.UpdateAsync(user);
 
-            return $"https://financetrackerbackend-1tp6.onrender.com/{imageUrl}";
+            return imageUrl;
         }
 
         public bool Verify(string old, string _new)

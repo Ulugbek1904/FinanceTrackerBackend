@@ -39,10 +39,7 @@ namespace FinanceTracker.Presentation.Controllers
 
             var user = await this.userService.RetrieveUserByIdAsync(userId);
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var profilePictureUrl = string.IsNullOrEmpty(user.ProfilePictureUrl)
-                ? null
-                : $"{baseUrl}/profile-pictures/{Path.GetFileName(user.ProfilePictureUrl)}";
+            var profilePictureUrl = user.ProfilePictureUrl; 
 
             var result = new
             {
