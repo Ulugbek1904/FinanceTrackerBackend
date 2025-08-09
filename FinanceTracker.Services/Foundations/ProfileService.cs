@@ -3,8 +3,6 @@ using FinanceTracker.Infrastructure.Brokers.Storages;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using FinanceTracker.Services.Foundations.Interfaces;
-using FinanceTracker.Infrastructure.Providers.FileProvider;
-using Microsoft.AspNetCore.Identity;
 using FinanceTracker.Domain.Models.DTOs.AuthDtos;
 using FinanceTracker.Domain.Exceptions;
 using CloudinaryDotNet.Actions;
@@ -110,10 +108,10 @@ namespace FinanceTracker.Services.Foundations
                 if (uploadResult.Error != null)
                 {
                     Console.WriteLine($"Cloudinary Error: {uploadResult.Error.Message}");
-                    throw new Exception($"Cloudinary upload failed: {uploadResult.Error.Message}");
+                    throw new AppException($"Cloudinary upload failed: {uploadResult.Error.Message}");
                 }
 
-                var imageUrl = uploadResult.SecureUrl.AbsoluteUri; // HTTPS URL from Cloudinary
+                var imageUrl = uploadResult.SecureUrl.AbsoluteUri;
                 user.ProfilePictureUrl = imageUrl;
 
                 await storageBroker.UpdateAsync(user);
@@ -124,7 +122,7 @@ namespace FinanceTracker.Services.Foundations
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in UploadProfilePictureAsync: {ex.Message} - {ex.StackTrace}");
-                throw; // Re-throw to let the controller handle it
+                throw;
             }
         }
 

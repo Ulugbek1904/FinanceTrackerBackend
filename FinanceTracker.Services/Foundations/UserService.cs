@@ -33,7 +33,6 @@ namespace FinanceTracker.Services.Foundations
             await this.storageBroker.UpdateAsync(user);
 
             return existingUser;
-
         }
 
         public async ValueTask<User> RegisterUserAsync(User user)

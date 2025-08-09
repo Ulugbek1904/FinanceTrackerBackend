@@ -12,8 +12,6 @@ using FinanceTracker.Presentation.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using FinanceTracker.Infrastructure.Brokers.Storages;
 using FinanceTracker.Infrastructure.Brokers.Storages.Seed;
-using System.Net;
-using Microsoft.Extensions.FileProviders;
 
 
 namespace FinanceTracker.Presentation
@@ -157,17 +155,6 @@ namespace FinanceTracker.Presentation
 
         app.UseMiddleware<ProblemDetailsMiddleware>();
         app.UseRouting();
-
-        //var storagePath = "/app/LocalFileStorage";
-        //if (!Directory.Exists(storagePath))
-        //{
-        //    Directory.CreateDirectory(storagePath);
-        //}
-        //app.UseStaticFiles(new StaticFileOptions
-        //{
-        //    FileProvider = new PhysicalFileProvider(storagePath),
-        //    RequestPath = "/profile-pictures"
-        //});
 
         app.UseCors("AllowAngularClient");
 
