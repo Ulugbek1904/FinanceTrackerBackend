@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinanceTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(StorageBroker))]
-    [Migration("20250809095428_InitialMIgration")]
-    partial class InitialMIgration
+    [Migration("20250912131747_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
